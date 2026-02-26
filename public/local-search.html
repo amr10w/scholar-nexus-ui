@@ -1,677 +1,965 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOCAL DB SEARCH // NEXUS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <title>Research Database — Scholar Nexus</title>
+    <meta name="description"
+        content="Browse our curated network of local researchers with deep academic profiling and Semantic Scholar integration.">
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://api.semanticscholar.org">
+    <link rel="dns-prefetch" href="https://logo.clearbit.com">
+    <link rel="dns-prefetch" href="https://ui-avatars.com">
+
+    <!-- Prefetch likely next pages -->
+    <link rel="prefetch" href="scanner.html">
+    <link rel="prefetch" href="explorer.html">
+
+    <!-- CSS: tokens → components → layout → page -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/global.css">
-    <!-- SweetAlert -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Chart.js for Dashboard -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        :root {
-            --bg-body: #0f1115; --bg-card: #161920; --border: #2a2f3a; 
-            --text-main: #f1f5f9; --text-muted: #94a3b8; 
-            --accent: #3b82f6; --accent-hover: #2563eb; --success: #10b981;
-            --warning: #f59e0b; --danger: #ef4444;
-            --font-main: 'Inter', sans-serif; --font-header: 'Rajdhani', sans-serif;
-        }
+    <link rel="stylesheet" href="css/design-system.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/local-search.css">
 
-        /* Theme override for Light Mode handled by global.css, 
-           but we ensure specific dashboard elements adapt */
-
-        body { margin: 0; font-family: var(--font-main); background: var(--bg-body); color: var(--text-main); }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        
-        /* Layout Grid */
-        .scanner-layout {
-            display: grid; grid-template-columns: 350px 1fr; gap: 30px; margin-top: 20px; align-items: start;
-        }
-        @media (max-width: 1100px) { .scanner-layout { grid-template-columns: 1fr; } }
-
-        /* Left Panel */
-        .panel {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            position: sticky; top: 90px; z-index: 10;
-        }
-
-        .panel-title { font-family: var(--font-header); font-size: 1.4rem; margin: 0 0 20px 0; display: flex; align-items: center; justify-content: space-between; }
-        
-        /* Inputs */
-        .form-group { margin-bottom: 20px; position: relative; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
-        input, select { width: 100%; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-family: var(--font-main); box-sizing: border-box; outline:none; transition:0.3s;}
-        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-
-        /* Results List */
-        .results-scroll { max-height: 500px; overflow-y: auto; padding-right: 5px; margin-top: 20px;}
-        .results-scroll::-webkit-scrollbar { width: 6px; }
-        .results-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        
-        .author-card-mini {
-            background: var(--bg-body); border: 1px solid var(--border); padding: 15px;
-            border-radius: 10px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s;
-            border-left: 4px solid transparent;
-            position: relative;
-        }
-        .author-card-mini:hover { border-color: var(--accent); border-left-color: var(--accent); transform: translateX(5px); }
-        .ac-name { font-weight: 700; color: var(--text-main); font-size: 1rem; margin-bottom: 5px; }
-        .ac-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;}
-        .field-badge { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-top:5px;}
-
-        /* Main View Area */
-        .main-view { min-height: 60vh; padding-bottom: 40px; }
-        
-        /* DASHBOARD STYLES */
-        .dashboard-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;
-        }
-        .dash-card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 20px; display: flex; flex-direction: column;
-        }
-        .dash-card.full-width { grid-column: span 3; }
-        .dash-card.two-thirds { grid-column: span 2; }
-        
-        .stat-number { font-size: 2.5rem; font-weight: 800; font-family: var(--font-header); color: var(--accent); line-height: 1; }
-        .stat-label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
-
-        .chart-container { position: relative; height: 250px; width: 100%; display: flex; align-items: center; justify-content: center; }
-
-        /* Detail View Styles */
-        .btn-action { display:inline-block; background: var(--accent); color: #fff; text-decoration: none; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-action:hover { filter: brightness(1.2); transform: translateY(-2px); }
-        .section-title { font-family: var(--font-header); color: var(--text-main); font-size: 1.2rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-        .paper-row { display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg-body); border-radius: 8px; margin-bottom: 10px; }
-        
-        /* Toggle Switch */
-        .view-toggle {
-            display: flex; gap: 10px; background: var(--bg-body); padding: 5px; border-radius: 8px; border: 1px solid var(--border);
-        }
-        .vt-btn {
-            flex: 1; border: none; background: none; color: var(--text-muted); padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;
-        }
-        .vt-btn.active { background: var(--accent); color: white; }
-
-        @media (max-width: 900px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .dash-card.full-width, .dash-card.two-thirds { grid-column: span 1; }
-        }
-    </style>
+    <!-- Theme: load first to prevent FOUC -->
+    <script src="js/theme.js"></script>
 </head>
+
 <body>
 
+    <!-- ═══ NAVBAR (injected by layout.js) ═══ -->
     <div id="app-header"></div>
 
-    <div class="container">
-        <!-- Dashboard Toggle -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 style="font-family: var(--font-header); margin: 0; font-size: 2rem;">RESEARCH DATABASE</h1>
-            <div class="view-toggle">
-                <button class="vt-btn active" onclick="switchMode('list')" id="btn-list-mode"><i class="fas fa-list"></i> LIST</button>
-                <button class="vt-btn" onclick="switchMode('dashboard')" id="btn-dash-mode"><i class="fas fa-chart-pie"></i> DASHBOARD</button>
+
+    <!-- ═══ HERO SECTION ═══ -->
+    <section class="ls-hero">
+        <div class="container">
+            <span class="ls-hero__badge">
+                <i class="fas fa-database"></i> LOCAL RESEARCH DATABASE
+            </span>
+            <h1 class="ls-hero__title">Research Database</h1>
+            <p class="ls-hero__subtitle">
+                Browse our curated network of local researchers with deep academic profiling
+            </p>
+            <div class="ls-hero__stats" id="hero-stats">
+                <div class="ls-hero__stat">
+                    <span class="ls-hero__stat-value" id="stat-researchers">—</span>
+                    <span class="ls-hero__stat-label">Researchers</span>
+                </div>
+                <div class="ls-hero__stat">
+                    <span class="ls-hero__stat-value" id="stat-universities">—</span>
+                    <span class="ls-hero__stat-label">Universities</span>
+                </div>
+                <div class="ls-hero__stat">
+                    <span class="ls-hero__stat-value" id="stat-topics">—</span>
+                    <span class="ls-hero__stat-label">Topics</span>
+                </div>
             </div>
         </div>
+    </section>
 
-        <div class="scanner-layout">
-            
-            <!-- SIDEBAR: FILTERS -->
-            <div class="panel">
-                <div class="panel-title">
-                    <span><i class="fas fa-filter" style="color:var(--success)"></i> FILTERS</span>
-                    <button onclick="resetFilters()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;">RESET</button>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <section class="ls-content">
+        <div class="container">
+            <div class="ls-layout">
+
+                <!-- LEFT: Filter Sidebar -->
+                <aside class="ls-panel">
+                    <div class="ls-panel__card">
+                        <h2 class="ls-panel__title">
+                            <i class="fas fa-filter"></i> Search & Filter
+                        </h2>
+
+                        <div class="form-group">
+                            <label class="form-group__label">Researcher Name</label>
+                            <div class="ls-panel__search-wrap">
+                                <i class="fas fa-search"></i>
+                                <input type="text" class="input-field ls-panel__search-input" id="f-researcher"
+                                    placeholder="Search by name..." onkeyup="filterResearchers()">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-group__label">Main Topic</label>
+                            <select class="input-field" id="f-main-topic" onchange="filterResearchers()">
+                                <option value="">All Topics</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-group__label">University / Affiliation</label>
+                            <input type="text" class="input-field" id="f-university"
+                                placeholder="Filter by university..." onkeyup="filterResearchers()">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-group__label">Work Domain / Subtopic</label>
+                            <input type="text" class="input-field" id="f-subtopic" placeholder="Filter by domain..."
+                                onkeyup="filterResearchers()">
+                        </div>
+
+                        <div class="ls-panel__actions">
+                            <button class="btn btn-primary ls-panel__btn" onclick="filterResearchers()">
+                                <i class="fas fa-search"></i> Apply Filters
+                            </button>
+                            <button class="btn btn-outline ls-panel__btn-clear" onclick="clearFilters()">
+                                <i class="fas fa-times"></i> Clear All
+                            </button>
+                        </div>
+
+                        <div class="ls-panel__count" id="results-count">
+                            Showing <strong>0</strong> researchers
+                        </div>
+                    </div>
+                </aside>
+
+
+                <!-- RIGHT: Main Content Area -->
+                <div class="ls-main" id="main-view">
+
+                    <!-- TOP BAR -->
+                    <div class="ls-topbar">
+                        <div class="ls-topbar__left">
+                            <h2 class="ls-topbar__title">All Researchers</h2>
+                            <span class="ls-topbar__badge" id="grid-count">0</span>
+                        </div>
+                        <div class="ls-topbar__right">
+                            <button class="ls-view-btn ls-view-btn--active" id="btn-grid" onclick="setView('grid')">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button class="ls-view-btn" id="btn-list" onclick="setView('list')">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GRID / LIST -->
+                    <div class="ls-grid" id="researcher-grid"></div>
+
                 </div>
-                
-                <!-- Admin Upload Box -->
-                <div id="admin-upload-box" style="display:none; background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--success); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                    <h4 style="margin:0 0 10px 0; color:var(--success); font-size:0.9rem;"><i class="fas fa-upload"></i> Update DB</h4>
-                    <input type="text" id="csv-topic" placeholder="Main Topic Name" style="padding:8px; font-size:0.8rem; margin-bottom:5px;">
-                    <input type="file" id="csv-file" accept=".xlsx, .xls, .csv" style="padding: 5px; font-size: 0.8rem;">
-                    <button onclick="uploadDatabase()" style="background:var(--success); color:#fff; width:100%; border:none; padding:8px; border-radius:6px; margin-top:5px; cursor:pointer;">UPLOAD CSV</button>
+                <!-- end ls-main -->
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══ FOOTER (injected by layout.js) ═══ -->
+    <div id="app-footer"></div>
+    <script src="js/layout.js"></script>
+
+
+    <script>
+        /* ════════════════════════════════════════════
+           STATE
+           ════════════════════════════════════════════ */
+        let allResearchers = [];
+        let currentView = 'grid'; // 'grid' | 'list'
+        let debounceTimer = null;
+
+
+        /* ════════════════════════════════════════════════════════════
+           ⚠️ MOCK DATA FOR TESTING — DELETE THIS ENTIRE BLOCK LATER
+           ════════════════════════════════════════════════════════════ */
+        const MOCK_RESEARCHERS = [
+            { id: 901, name: 'Ahmed Hassan', affiliation: 'Cairo University', main_topic: 'AI / Machine Learning', subtopics: 'Deep Learning, NLP, Computer Vision', scholar_id: '1234567' },
+            { id: 902, name: 'Sara El-Sayed', affiliation: 'Ain Shams University', main_topic: 'VLSI / Hardware', subtopics: 'FPGA, Digital Design, SoC', scholar_id: '' },
+            { id: 903, name: 'Mohamed Khaled', affiliation: 'Alexandria University', main_topic: 'Software Engineering', subtopics: 'Web Development, DevOps, Cloud', scholar_id: '' },
+            { id: 904, name: 'Nour Abdel-Rahman', affiliation: 'GUC', main_topic: 'Cybersecurity', subtopics: 'Network Security, Cryptography, Forensics', scholar_id: '' },
+            { id: 905, name: 'Youssef Tarek', affiliation: 'AAST', main_topic: 'AI / Machine Learning', subtopics: 'Reinforcement Learning, Robotics', scholar_id: '' },
+            { id: 906, name: 'Layla Mostafa', affiliation: 'Nile University', main_topic: 'Biotech / Medical', subtopics: 'Bioinformatics, Genomics, Drug Discovery', scholar_id: '' },
+            { id: 907, name: 'Omar Fathy', affiliation: 'Helwan University', main_topic: 'AI / Machine Learning', subtopics: 'Transformer Models, LLMs, Text Generation', scholar_id: '' },
+            { id: 908, name: 'Hana Mahmoud', affiliation: 'Cairo University', main_topic: 'VLSI / Hardware', subtopics: 'Analog Design, Power Electronics', scholar_id: '' },
+            { id: 909, name: 'Khaled Emad', affiliation: 'AAST', main_topic: 'Software Engineering', subtopics: 'Microservices, System Design, Databases', scholar_id: '' },
+        ];
+
+        const MOCK_TOPICS = ['AI / Machine Learning', 'VLSI / Hardware', 'Software Engineering', 'Cybersecurity', 'Biotech / Medical'];
+
+        const MOCK_PROFILE = {
+            local: null, // filled at runtime
+            author: {
+                authorId: 'mock-123',
+                name: 'Mock Author',
+                citationCount: 4523,
+                hIndex: 32,
+                paperCount: 87,
+                url: 'https://www.semanticscholar.org/author/mock',
+                primaryField: 'Computer Science',
+                papers: [
+                    { title: 'Attention Is All You Need: A Comprehensive Survey', year: 2024, venue: 'NeurIPS', citationCount: 1200, fieldsOfStudy: ['Computer Science', 'Machine Learning'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'Sara El-Sayed', authorId: '2' }, { name: 'John Smith', authorId: '3' }], url: '#', openAccessPdf: { url: '#' } },
+                    { title: 'Deep Reinforcement Learning for Autonomous Systems', year: 2023, venue: 'ICML', citationCount: 890, fieldsOfStudy: ['Computer Science', 'AI'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'Emily Chen', authorId: '4' }], url: '#', openAccessPdf: null },
+                    { title: 'Efficient Transformer Architectures for Edge Devices', year: 2023, venue: 'CVPR', citationCount: 456, fieldsOfStudy: ['Computer Science'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'Youssef Tarek', authorId: '5' }, { name: 'Omar Fathy', authorId: '6' }], url: '#', openAccessPdf: { url: '#' } },
+                    { title: 'Federated Learning in Healthcare Applications', year: 2022, venue: 'Nature MI', citationCount: 320, fieldsOfStudy: ['Computer Science', 'Medicine'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'Layla Mostafa', authorId: '7' }], url: '#', openAccessPdf: null },
+                    { title: 'Graph Neural Networks for Social Network Analysis', year: 2022, venue: 'KDD', citationCount: 210, fieldsOfStudy: ['Computer Science'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'Nour Abdel-Rahman', authorId: '8' }], url: '#', openAccessPdf: { url: '#' } },
+                    { title: 'Multi-Modal Learning with Vision Transformers', year: 2021, venue: 'ICLR', citationCount: 178, fieldsOfStudy: ['Computer Science', 'Machine Learning'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'Sara El-Sayed', authorId: '2' }], url: '#', openAccessPdf: null },
+                    { title: 'Natural Language Understanding for Arabic Text', year: 2021, venue: 'ACL', citationCount: 145, fieldsOfStudy: ['Computer Science', 'NLP'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }], url: '#', openAccessPdf: { url: '#' } },
+                    { title: 'Adversarial Robustness in Deep Neural Networks', year: 2020, venue: 'AAAI', citationCount: 98, fieldsOfStudy: ['Computer Science'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'John Smith', authorId: '3' }], url: '#', openAccessPdf: null },
+                    { title: 'Self-Supervised Pre-Training for Computer Vision', year: 2020, venue: 'ECCV', citationCount: 67, fieldsOfStudy: ['Computer Science', 'Computer Vision'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }, { name: 'Emily Chen', authorId: '4' }, { name: 'Khaled Emad', authorId: '9' }], url: '#', openAccessPdf: { url: '#' } },
+                    { title: 'Optimization Methods for Large-Scale Machine Learning', year: 2019, venue: 'JMLR', citationCount: 55, fieldsOfStudy: ['Computer Science', 'Machine Learning'], authors: [{ name: 'Ahmed Hassan', authorId: '1' }], url: '#', openAccessPdf: null },
+                ]
+            },
+            collaborators: [
+                ['Sara El-Sayed', 5],
+                ['John Smith', 4],
+                ['Emily Chen', 3],
+                ['Youssef Tarek', 2],
+                ['Omar Fathy', 2],
+                ['Layla Mostafa', 1],
+                ['Nour Abdel-Rahman', 1],
+                ['Khaled Emad', 1],
+            ]
+        };
+
+        const USE_MOCK = true; // ← Set to false when real DB has data
+        /* ═══ END MOCK DATA BLOCK ═══ */
+
+
+        /* ════════════════════════════════════════════
+           INIT
+           ════════════════════════════════════════════ */
+        window.onload = async () => {
+            await loadTopics();
+            await filterResearchers();
+        };
+
+
+        /* ── Load Topics Dropdown ── */
+        async function loadTopics() {
+            try {
+                const res = await fetch('/api/local-researchers/main-topics', { credentials: 'include' });
+                const topics = await res.json();
+                const sel = document.getElementById('f-main-topic');
+
+                /* ⚠️ MOCK FALLBACK — DELETE LATER */
+                const topicList = (topics && topics.length > 0) ? topics : (USE_MOCK ? MOCK_TOPICS : []);
+
+                topicList.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t;
+                    opt.textContent = t;
+                    sel.appendChild(opt);
+                });
+                document.getElementById('stat-topics').textContent = topicList.length;
+            } catch (e) {
+                console.error('Failed to load topics:', e);
+                /* ⚠️ MOCK FALLBACK — DELETE LATER */
+                if (USE_MOCK) {
+                    const sel = document.getElementById('f-main-topic');
+                    MOCK_TOPICS.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t;
+                        opt.textContent = t;
+                        sel.appendChild(opt);
+                    });
+                    document.getElementById('stat-topics').textContent = MOCK_TOPICS.length;
+                }
+            }
+        }
+
+
+        /* ════════════════════════════════════════════
+           FILTER / FETCH RESEARCHERS
+           ════════════════════════════════════════════ */
+        async function filterResearchers() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                const mainTopic = document.getElementById('f-main-topic').value;
+                const subtopic = document.getElementById('f-subtopic').value;
+                const university = document.getElementById('f-university').value;
+                const researcher = document.getElementById('f-researcher').value;
+
+                const params = new URLSearchParams();
+                if (mainTopic) params.set('main_topic', mainTopic);
+                if (subtopic) params.set('subtopic', subtopic);
+                if (university) params.set('university', university);
+                if (researcher) params.set('researcher', researcher);
+
+                try {
+                    const res = await fetch(`/api/local-researchers/filter?${params}`, { credentials: 'include' });
+                    let data = await res.json();
+
+                    /* ⚠️ MOCK FALLBACK — DELETE THIS IF BLOCK LATER */
+                    if ((!data || data.length === 0) && USE_MOCK) {
+                        data = MOCK_RESEARCHERS.filter(r => {
+                            if (mainTopic && r.main_topic !== mainTopic) return false;
+                            if (subtopic && !r.subtopics.toLowerCase().includes(subtopic.toLowerCase())) return false;
+                            if (university && !r.affiliation.toLowerCase().includes(university.toLowerCase())) return false;
+                            if (researcher && !r.name.toLowerCase().includes(researcher.toLowerCase())) return false;
+                            return true;
+                        });
+                    }
+
+                    allResearchers = data;
+                    renderResearchers();
+                    updateStats();
+                } catch (e) {
+                    console.error('Filter error:', e);
+                    /* ⚠️ MOCK FALLBACK — DELETE THIS BLOCK LATER */
+                    if (USE_MOCK) {
+                        allResearchers = MOCK_RESEARCHERS;
+                        renderResearchers();
+                        updateStats();
+                    }
+                }
+            }, 250);
+        }
+
+
+        function clearFilters() {
+            document.getElementById('f-researcher').value = '';
+            document.getElementById('f-main-topic').value = '';
+            document.getElementById('f-university').value = '';
+            document.getElementById('f-subtopic').value = '';
+            filterResearchers();
+        }
+
+
+        function updateStats() {
+            document.getElementById('stat-researchers').textContent = allResearchers.length;
+            const unis = new Set(allResearchers.map(r => r.affiliation).filter(Boolean));
+            document.getElementById('stat-universities').textContent = unis.size;
+            document.getElementById('results-count').innerHTML =
+                `Showing <strong>${allResearchers.length}</strong> researchers`;
+            document.getElementById('grid-count').textContent = allResearchers.length;
+        }
+
+
+        /* ════════════════════════════════════════════
+           RENDER RESEARCHER LIST
+           ════════════════════════════════════════════ */
+        function setView(v) {
+            currentView = v;
+            document.getElementById('btn-grid').classList.toggle('ls-view-btn--active', v === 'grid');
+            document.getElementById('btn-list').classList.toggle('ls-view-btn--active', v === 'list');
+            renderResearchers();
+        }
+
+        function getAvatarColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = Math.abs(hash) % 360;
+            return `hsl(${hue}, 55%, 55%)`;
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function getTopicColor(topic) {
+            if (!topic) return 'ls-topic--default';
+            const t = topic.toLowerCase();
+            if (t.includes('ai') || t.includes('machine') || t.includes('learning') || t.includes('deep')) return 'ls-topic--green';
+            if (t.includes('vlsi') || t.includes('hardware') || t.includes('embedded') || t.includes('circuit')) return 'ls-topic--blue';
+            if (t.includes('software') || t.includes('programming') || t.includes('web')) return 'ls-topic--purple';
+            if (t.includes('bio') || t.includes('medical') || t.includes('health')) return 'ls-topic--pink';
+            if (t.includes('network') || t.includes('security') || t.includes('cyber')) return 'ls-topic--orange';
+            return 'ls-topic--default';
+        }
+
+        function renderSubtopics(subtopics) {
+            if (!subtopics) return '';
+            const arr = subtopics.split(',').map(s => s.trim()).filter(Boolean);
+            const visible = arr.slice(0, 2);
+            const more = arr.length - 2;
+            let html = visible.map(s => `<span class="ls-card__subtopic">${s}</span>`).join('');
+            if (more > 0) html += `<span class="ls-card__subtopic ls-card__subtopic--more">+${more} more</span>`;
+            return html;
+        }
+
+        function renderResearchers() {
+            const grid = document.getElementById('researcher-grid');
+
+            if (allResearchers.length === 0) {
+                grid.className = 'ls-grid';
+                grid.innerHTML = `
+                    <div class="ls-empty">
+                        <i class="fas fa-users-slash"></i>
+                        <h3>No researchers match your filters</h3>
+                        <p>Try adjusting your search criteria</p>
+                        <button class="btn btn-outline" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentView === 'grid') {
+                grid.className = 'ls-grid ls-grid--cards';
+                grid.innerHTML = allResearchers.map((r, i) => `
+                    <div class="ls-card" style="animation-delay:${i * 0.03}s">
+                        <div class="ls-card__top">
+                            <span class="ls-card__topic ${getTopicColor(r.main_topic)}">${r.main_topic || 'General'}</span>
+                        </div>
+                        <div class="ls-card__avatar" style="background:${getAvatarColor(r.name)}">
+                            ${getInitials(r.name)}
+                        </div>
+                        <h3 class="ls-card__name">${r.name}</h3>
+                        <p class="ls-card__affil">${r.affiliation || 'Unknown Affiliation'}</p>
+                        <div class="ls-card__subtopics">${renderSubtopics(r.subtopics)}</div>
+                        <button class="btn btn-outline ls-card__btn" onclick="loadAuthorProfile(${r.id})">
+                            View Profile <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                grid.className = 'ls-grid ls-grid--list';
+                grid.innerHTML = allResearchers.map((r, i) => `
+                    <div class="ls-row" style="animation-delay:${i * 0.02}s">
+                        <div class="ls-row__avatar" style="background:${getAvatarColor(r.name)}">
+                            ${getInitials(r.name)}
+                        </div>
+                        <div class="ls-row__info">
+                            <span class="ls-row__name">${r.name}</span>
+                            <span class="ls-row__affil">${r.affiliation || ''}</span>
+                        </div>
+                        <span class="ls-card__topic ${getTopicColor(r.main_topic)}">${r.main_topic || 'General'}</span>
+                        <button class="btn btn-outline ls-row__btn" onclick="loadAuthorProfile(${r.id})">
+                            View Profile <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+
+        /* ════════════════════════════════════════════
+           AUTHOR PROFILE VIEW
+           ════════════════════════════════════════════ */
+        let profileData = null; // { local, author, collaborators }
+
+        async function loadAuthorProfile(id) {
+            const main = document.getElementById('main-view');
+
+            /* Loading state */
+            main.innerHTML = `
+                <div class="ls-profile-loading">
+                    <div class="ls-profile-loading__spinner">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                    </div>
+                    <h3>Loading researcher profile...</h3>
+                    <p>Fetching data from Semantic Scholar</p>
+                </div>
+            `;
+
+            try {
+                const res = await fetch('/api/local-researchers/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ id })
+                });
+                profileData = await res.json();
+
+                /* ⚠️ MOCK FALLBACK — DELETE THIS IF BLOCK LATER */
+                if (USE_MOCK && (!profileData.author || !profileData.author.authorId)) {
+                    const mockLocal = MOCK_RESEARCHERS.find(r => r.id === id) || profileData.local;
+                    MOCK_PROFILE.local = mockLocal || { id, name: 'Unknown', affiliation: '', main_topic: '', subtopics: '' };
+                    MOCK_PROFILE.author.name = MOCK_PROFILE.local.name;
+                    profileData = { ...MOCK_PROFILE, local: MOCK_PROFILE.local };
+                }
+
+                renderProfile();
+            } catch (e) {
+                /* ⚠️ MOCK FALLBACK — DELETE THIS IF/ELSE LATER (keep only the else branch) */
+                if (USE_MOCK) {
+                    const mockLocal = MOCK_RESEARCHERS.find(r => r.id === id) || { id, name: 'Unknown', affiliation: '', main_topic: '', subtopics: '' };
+                    MOCK_PROFILE.local = mockLocal;
+                    MOCK_PROFILE.author.name = mockLocal.name;
+                    profileData = { ...MOCK_PROFILE, local: mockLocal };
+                    renderProfile();
+                } else {
+                    main.innerHTML = `
+                        <div class="ls-profile-loading">
+                            <i class="fas fa-exclamation-triangle" style="font-size:2.5rem;color:var(--danger);margin-bottom:var(--space-md)"></i>
+                            <h3>Failed to load profile</h3>
+                            <p>Unable to fetch researcher data</p>
+                            <button class="btn btn-outline" onclick="backToList()" style="margin-top:var(--space-md)">
+                                <i class="fas fa-arrow-left"></i> Back to list
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+
+        function backToList() {
+            const main = document.getElementById('main-view');
+            main.innerHTML = `
+                <div class="ls-topbar">
+                    <div class="ls-topbar__left">
+                        <h2 class="ls-topbar__title">All Researchers</h2>
+                        <span class="ls-topbar__badge" id="grid-count">${allResearchers.length}</span>
+                    </div>
+                    <div class="ls-topbar__right">
+                        <button class="ls-view-btn ${currentView === 'grid' ? 'ls-view-btn--active' : ''}" id="btn-grid" onclick="setView('grid')">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="ls-view-btn ${currentView === 'list' ? 'ls-view-btn--active' : ''}" id="btn-list" onclick="setView('list')">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="ls-grid" id="researcher-grid"></div>
+            `;
+            renderResearchers();
+        }
+
+
+        function renderProfile() {
+            const { local, author, collaborators } = profileData;
+            const main = document.getElementById('main-view');
+            const hasS2 = author && author.authorId;
+
+            main.innerHTML = `
+                <!-- BACK BUTTON -->
+                <button class="ls-back-btn" onclick="backToList()">
+                    <i class="fas fa-arrow-left"></i> Back to list
+                </button>
+
+                <!-- PROFILE HEADER -->
+                <div class="ls-profile">
+                    <div class="ls-profile__header">
+                        <div class="ls-profile__avatar" style="background:${getAvatarColor(local.name)}">
+                            ${getInitials(local.name)}
+                        </div>
+                        <div class="ls-profile__info">
+                            <h1 class="ls-profile__name">${local.name}</h1>
+                            <p class="ls-profile__affil">
+                                <i class="fas fa-building"></i> ${local.affiliation || 'Unknown Affiliation'}
+                            </p>
+                            <div class="ls-profile__tags">
+                                <span class="ls-card__topic ${getTopicColor(local.main_topic)}">${local.main_topic || 'General'}</span>
+                                ${(local.subtopics || '').split(',').filter(Boolean).map(s =>
+                `<span class="ls-profile__subtopic">${s.trim()}</span>`
+            ).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STATS ROW -->
+                    <div class="ls-profile__stats">
+                        <div class="ls-profile__stat-box">
+                            <span class="ls-profile__stat-num">${hasS2 ? author.hIndex ?? '—' : '—'}</span>
+                            <span class="ls-profile__stat-lbl">H-Index</span>
+                        </div>
+                        <div class="ls-profile__stat-box">
+                            <span class="ls-profile__stat-num">${hasS2 ? (author.paperCount ?? '—') : '—'}</span>
+                            <span class="ls-profile__stat-lbl">Papers</span>
+                        </div>
+                        <div class="ls-profile__stat-box">
+                            <span class="ls-profile__stat-num">${hasS2 ? (author.citationCount ?? '—').toLocaleString() : '—'}</span>
+                            <span class="ls-profile__stat-lbl">Citations</span>
+                        </div>
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="ls-profile__actions">
+                        ${hasS2 && author.url
+                    ? `<a href="${author.url}" target="_blank" class="btn btn-outline ls-profile__action-btn">
+                                    <i class="fas fa-external-link-alt"></i> View on Semantic Scholar
+                                </a>`
+                    : ''
+                }
+                        <a href="scanner.html?q=${encodeURIComponent(local.name)}" class="btn btn-primary ls-profile__action-btn">
+                            <i class="fas fa-satellite-dish"></i> Run AI Scan
+                        </a>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>MAIN TOPIC</label>
-                    <select id="filter-maintopic" onchange="runFilter()">
-                        <option value="">-- All Topics --</option>
+                <!-- TABS -->
+                <div class="ls-tabs">
+                    <div class="ls-tabs__nav">
+                        <button class="ls-tabs__tab ls-tabs__tab--active" data-tab="papers" onclick="switchTab('papers')">
+                            <i class="fas fa-file-alt"></i> Papers
+                        </button>
+                        <button class="ls-tabs__tab" data-tab="coauthors" onclick="switchTab('coauthors')">
+                            <i class="fas fa-users"></i> Co-Authors
+                        </button>
+                        <button class="ls-tabs__tab" data-tab="citations" onclick="switchTab('citations')">
+                            <i class="fas fa-quote-right"></i> Citation Network
+                        </button>
+                        <button class="ls-tabs__tab" data-tab="analytics" onclick="switchTab('analytics')">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </button>
+                    </div>
+                    <div class="ls-tabs__content" id="tab-content"></div>
+                </div>
+            `;
+
+            switchTab('papers');
+        }
+
+
+        /* ════════════════════════════════════════════
+           TABS
+           ════════════════════════════════════════════ */
+        function switchTab(tab) {
+            document.querySelectorAll('.ls-tabs__tab').forEach(t => {
+                t.classList.toggle('ls-tabs__tab--active', t.dataset.tab === tab);
+            });
+            const content = document.getElementById('tab-content');
+
+            switch (tab) {
+                case 'papers': renderPapersTab(content); break;
+                case 'coauthors': renderCoauthorsTab(content); break;
+                case 'citations': renderCitationsTab(content); break;
+                case 'analytics': renderAnalyticsTab(content); break;
+            }
+        }
+
+
+        /* ── TAB 1: PAPERS ── */
+        function renderPapersTab(container) {
+            const { author } = profileData;
+            if (!author || !author.papers || author.papers.length === 0) {
+                container.innerHTML = `
+                    <div class="ls-tab-empty">
+                        <i class="fas fa-file-circle-xmark"></i>
+                        <h3>No papers found</h3>
+                        <p>Semantic Scholar data is not available for this researcher</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let papers = [...author.papers];
+
+            container.innerHTML = `
+                <div class="ls-papers-controls">
+                    <div class="ls-papers-controls__search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="input-field" id="paper-search"
+                            placeholder="Search papers by keyword..." onkeyup="filterPapers()">
+                    </div>
+                    <input type="number" class="input-field ls-papers-controls__year" id="paper-year-filter"
+                        placeholder="From year" onchange="filterPapers()">
+                    <select class="input-field ls-papers-controls__sort" id="paper-sort" onchange="filterPapers()">
+                        <option value="cited">Most Cited</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
                     </select>
                 </div>
+                <div id="papers-list"></div>
+            `;
 
-                <!-- Autocomplete Datalists -->
-                <datalist id="suggestions-subtopic"></datalist>
-                <datalist id="suggestions-university"></datalist>
-
-                <div class="form-group">
-                    <label>SUBTOPIC / WORK DOMAIN</label>
-                    <input type="text" id="filter-subtopic" list="suggestions-subtopic" placeholder="Type to search..." oninput="runFilter()">
-                </div>
-
-                <div class="form-group">
-                    <label>UNIVERSITY</label>
-                    <input type="text" id="filter-university" list="suggestions-university" placeholder="Type to search..." oninput="runFilter()">
-                </div>
-
-                <div class="form-group">
-                    <label>RESEARCHER NAME</label>
-                    <input type="text" id="filter-researcher" placeholder="Name search..." oninput="runFilter()">
-                </div>
-
-                <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right; margin-top: -10px; margin-bottom: 20px;">
-                    <span id="result-count">0</span> matches found
-                </div>
-
-                <!-- Compact Results for Sidebar -->
-                <div class="results-scroll" id="results-list">
-                    <!-- Items injected here -->
-                </div>
-            </div>
-
-            <!-- MAIN CONTENT: Views -->
-            <div class="main-view">
-                
-                <!-- VIEW 1: Researcher Details (Default) -->
-                <div id="view-details" style="display:block;">
-                    <div id="detail-content" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 50px 20px; border: 2px dashed var(--border); border-radius: 16px;">
-                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.3;"></i>
-                        <h2 style="font-family: var(--font-header); color: var(--text-main);">SELECT A RESEARCHER</h2>
-                        <p>Click on a name from the list to view full profile, papers, and analysis.</p>
-                        <p style="font-size: 0.9rem; margin-top: 10px;">Or switch to <strong style="color:var(--accent)">Dashboard Mode</strong> for statistics.</p>
-                    </div>
-                </div>
-
-                <!-- VIEW 2: Dashboard Analytics -->
-                <div id="view-dashboard" style="display:none;">
-                    <div class="dashboard-grid">
-                        <!-- Total Count -->
-                        <div class="dash-card">
-                            <div class="stat-number" id="dash-total">0</div>
-                            <div class="stat-label">Total Researchers</div>
-                        </div>
-                        <!-- Top Topic -->
-                        <div class="dash-card">
-                            <div class="stat-number" id="dash-top-topic" style="font-size: 1.5rem;">-</div>
-                            <div class="stat-label">Top Research Field</div>
-                        </div>
-                        <!-- Top Uni -->
-                        <div class="dash-card">
-                            <div class="stat-number" id="dash-top-uni" style="font-size: 1.5rem;">-</div>
-                            <div class="stat-label">Top University</div>
-                        </div>
-
-                        <!-- Charts Row -->
-                        <div class="dash-card two-thirds">
-                            <h3 style="font-family: var(--font-header); margin-top: 0;">University Distribution</h3>
-                            <div class="chart-container">
-                                <canvas id="chart-uni"></canvas>
-                            </div>
-                        </div>
-                        <div class="dash-card">
-                            <h3 style="font-family: var(--font-header); margin-top: 0;">Topics</h3>
-                            <div class="chart-container">
-                                <canvas id="chart-topic"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Work Domains Analysis -->
-                        <div class="dash-card full-width">
-                            <h3 style="font-family: var(--font-header); margin-top: 0;">Work Domain / Subtopic Frequency</h3>
-                            <div class="chart-container" style="height: 300px;">
-                                <canvas id="chart-subtopic"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-
-    <div id="app-footer"></div>
-
-    <script src="/js/layout.js"></script>
-
-<script>
-    // Global Data Holder
-    let allData = []; 
-    let filteredData = [];
-    let chartInstances = {};
-
-    // --- CONFIG: BLACKLIST ---
-    // Words to strip from University names or ignore in Charts
-    const IGNORED_LOCATIONS = [
-        "Egypt", "Saudi Arabia", "USA", "United States", "UK", "Germany", 
-        "Canada", "Japan", "China", "France", "Cairo", "Giza"
-    ];
-
-    window.onload = () => {
-        const user = JSON.parse(localStorage.getItem('nexus_user'));
-        if(user && user.role === 'admin') {
-            document.getElementById('admin-upload-box').style.display = 'block';
-        }
-        fetchMainTopics();
-        initialLoad();
-    };
-
-    // --- 1. INTELLIGENT DATA CLEANING ---
-    
-    function cleanAffiliation(raw) {
-        if (!raw) return "Unknown Affiliation";
-        let str = raw;
-
-        // Step 1: Remove Titles (Professor, Dr, etc.)
-        // Case insensitive replacement
-        const titles = ["Professor", "Assoc. Prof.", "Assistant Prof.", "Prof.", "Dr.", "Lecturer", "PhD Candidate", "Principal", "Eng.", "MSc"];
-        titles.forEach(t => {
-            // Remove "Professor of X" or just "Professor"
-            const reg = new RegExp(`^${t}\\s+(of\\s+.*?)?`, 'i'); 
-            str = str.replace(reg, '');
-            // Remove standalone title
-            const reg2 = new RegExp(`\\b${t}\\b`, 'gi'); 
-            str = str.replace(reg2, '');
-        });
-
-        // Step 2: Split by delimiters (" at ", " - ", ",")
-        // We prioritize "at" because it's usually "Role at University"
-        if (str.toLowerCase().includes(' at ')) {
-            const parts = str.split(/ at /i);
-            str = parts[1]; // Take the part after 'at'
-        } else if (str.includes(',')) {
-            const parts = str.split(',');
-            // Heuristic: Usually [Role, Uni, Country] or [Uni, Country]
-            // We want the University part.
-            // If part[0] is not a Country, take part[0], else part[1]
-            let candidate = parts[0].trim();
-            
-            // If the first part looks like a Country (e.g. "Egypt"), try the second part
-            if (IGNORED_LOCATIONS.some(loc => candidate.toLowerCase() === loc.toLowerCase())) {
-                str = parts[1] || candidate;
-            } else {
-                // If the first part is NOT a country, check if we should look further
-                // Often: "Professor, Ain Shams Uni" -> Take second
-                // Often: "Ain Shams Uni, Egypt" -> Take first
-                // If cleanAffiliation was called, Titles are gone. 
-                // So "Ain Shams Uni, Egypt" -> parts[0] is best.
-                str = parts[0]; 
-            }
+            filterPapers();
         }
 
-        // Step 3: Remove trailing Countries (e.g., "Ain Shams University Egypt" -> "Ain Shams University")
-        IGNORED_LOCATIONS.forEach(loc => {
-            const reg = new RegExp(`\\b${loc}\\b`, 'gi');
-            str = str.replace(reg, '');
-        });
+        function filterPapers() {
+            const { author } = profileData;
+            if (!author || !author.papers) return;
 
-        // Step 4: Final Cleanup
-        str = str.replace(/[^\w\s&]/g, '').trim(); // Remove weird symbols
-        if (str.length < 3) return raw.split(',')[0]; // Fallback if we cleaned too much
+            const query = (document.getElementById('paper-search')?.value || '').toLowerCase();
+            const yearFrom = parseInt(document.getElementById('paper-year-filter')?.value) || 0;
+            const sort = document.getElementById('paper-sort')?.value || 'cited';
 
-        return str;
-    }
-
-    // --- 2. CORE LOGIC ---
-
-    async function initialLoad() {
-        try {
-            // Fetches EVERYTHING now (Limit removed in backend)
-            const res = await fetch(`/api/local-researchers/filter`); 
-            allData = await res.json();
-            populateSuggestions(allData);
-            runFilter(); 
-        } catch (e) { console.error("Init Error", e); }
-    }
-
-    async function fetchMainTopics() {
-        try {
-            const res = await fetch('/api/local-researchers/main-topics');
-            const topics = await res.json();
-            const select = document.getElementById('filter-maintopic');
-            select.innerHTML = '<option value="">-- All Topics --</option>';
-            topics.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t; opt.textContent = t;
-                select.appendChild(opt);
+            let papers = author.papers.filter(p => {
+                if (query && !p.title.toLowerCase().includes(query)) return false;
+                if (yearFrom && p.year < yearFrom) return false;
+                return true;
             });
-        } catch (e) { console.error('Failed to load topics', e); }
-    }
 
-    function populateSuggestions(data) {
-        const unis = new Set();
-        const subs = new Set();
+            if (sort === 'cited') papers.sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0));
+            else if (sort === 'newest') papers.sort((a, b) => (b.year || 0) - (a.year || 0));
+            else papers.sort((a, b) => (a.year || 0) - (b.year || 0));
 
-        data.forEach(item => {
-            if (item.affiliation) {
-                const clean = cleanAffiliation(item.affiliation);
-                if(clean && clean !== "Unknown Affiliation") unis.add(clean);
+            const list = document.getElementById('papers-list');
+            if (!list) return;
+
+            if (papers.length === 0) {
+                list.innerHTML = `<div class="ls-tab-empty"><i class="fas fa-search"></i><h3>No papers found for this search</h3></div>`;
+                return;
             }
-            if (item.subtopics) {
-                // Remove countries from subtopics if they appear there by mistake
-                item.subtopics.split(/[\/,]/).forEach(s => {
-                    let cleanS = s.trim();
-                    if(!IGNORED_LOCATIONS.some(loc => cleanS.toLowerCase() === loc.toLowerCase())) {
-                         subs.add(cleanS);
+
+            list.innerHTML = papers.map(p => {
+                const hasOA = p.openAccessPdf && p.openAccessPdf.url;
+                const fields = (p.fieldsOfStudy || []).slice(0, 3);
+                const authors = (p.authors || []).map(a => a.name).slice(0, 4).join(', ');
+                const moreAuthors = (p.authors || []).length > 4 ? ` +${(p.authors.length - 4)} more` : '';
+
+                return `
+                    <div class="ls-paper">
+                        <div class="ls-paper__icon ${hasOA ? 'ls-paper__icon--oa' : ''}">
+                            ${hasOA
+                        ? `<a href="${p.openAccessPdf.url}" target="_blank" title="Open Access PDF"><i class="fas fa-download"></i></a>`
+                        : `<i class="fas fa-lock"></i>`
                     }
-                });
-            }
-        });
-
-        document.getElementById('suggestions-university').innerHTML = Array.from(unis).sort().map(u => `<option value="${u}">`).join('');
-        document.getElementById('suggestions-subtopic').innerHTML = Array.from(subs).sort().map(s => `<option value="${s}">`).join('');
-    }
-
-    async function runFilter() {
-        const main_topic = document.getElementById('filter-maintopic').value;
-        const subtopic = document.getElementById('filter-subtopic').value;
-        const university = document.getElementById('filter-university').value;
-        const researcher = document.getElementById('filter-researcher').value;
-
-        const params = new URLSearchParams();
-        if (main_topic) params.append('main_topic', main_topic);
-        if (subtopic) params.append('subtopic', subtopic);
-        if (university) params.append('university', university);
-        if (researcher) params.append('researcher', researcher);
-
-        const list = document.getElementById('results-list');
-        list.innerHTML = '<div style="padding:10px; text-align:center;"><i class="fas fa-spinner fa-spin"></i></div>';
-
-        try {
-            const res = await fetch(`/api/local-researchers/filter?${params.toString()}`);
-            filteredData = await res.json();
-            
-            document.getElementById('result-count').innerText = filteredData.length;
-
-            if(filteredData.length === 0) { 
-                list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px;">No matches.</div>'; 
-            } else {
-                list.innerHTML = filteredData.map(r => {
-                    const cleanUni = cleanAffiliation(r.affiliation);
-                    return `
-                    <div class="author-card-mini" onclick="analyzeLocal(${r.id})">
-                        <div class="ac-name">${r.name}</div>
-                        <div class="ac-meta"><i class="fas fa-university" style="font-size:0.7rem;"></i> ${cleanUni}</div>
-                        ${r.main_topic ? `<span class="field-badge">${r.main_topic}</span>` : ''}
+                        </div>
+                        <div class="ls-paper__body">
+                            <a href="${p.url || '#'}" target="_blank" class="ls-paper__title">${p.title}</a>
+                            <div class="ls-paper__meta">
+                                ${p.year ? `<span class="ls-paper__pill"><i class="fas fa-calendar"></i> ${p.year}</span>` : ''}
+                                ${p.venue ? `<span class="ls-paper__pill"><i class="fas fa-university"></i> ${p.venue}</span>` : ''}
+                                <span class="ls-paper__pill ls-paper__pill--cite"><i class="fas fa-quote-right"></i> ${p.citationCount || 0} citations</span>
+                            </div>
+                            <p class="ls-paper__authors">${authors}${moreAuthors}</p>
+                            ${fields.length > 0
+                        ? `<div class="ls-paper__fields">${fields.map(f => `<span class="ls-paper__field-tag">${f}</span>`).join('')}</div>`
+                        : ''
+                    }
+                        </div>
                     </div>
-                `}).join('');
-            }
-
-            if (document.getElementById('view-dashboard').style.display === 'block') {
-                updateDashboard();
-            }
-
-        } catch (e) { 
-            console.error(e);
-            list.innerHTML = '<div style="color:var(--danger); text-align:center;">Error loading data.</div>'; 
+                `;
+            }).join('');
         }
-    }
 
-    // --- 3. DASHBOARD LOGIC (With Strict Filtering) ---
 
-    function switchMode(mode) {
-        const listBtn = document.getElementById('btn-list-mode');
-        const dashBtn = document.getElementById('btn-dash-mode');
-        const detailView = document.getElementById('view-details');
-        const dashView = document.getElementById('view-dashboard');
+        /* ── TAB 2: CO-AUTHORS ── */
+        function renderCoauthorsTab(container) {
+            const { collaborators } = profileData;
 
-        if (mode === 'dashboard') {
-            listBtn.classList.remove('active');
-            dashBtn.classList.add('active');
-            detailView.style.display = 'none';
-            dashView.style.display = 'block';
-            updateDashboard();
-        } else {
-            listBtn.classList.add('active');
-            dashBtn.classList.remove('active');
-            detailView.style.display = 'block';
-            dashView.style.display = 'none';
+            if (!collaborators || collaborators.length === 0) {
+                container.innerHTML = `
+                    <div class="ls-tab-empty">
+                        <i class="fas fa-user-slash"></i>
+                        <h3>No co-author data available</h3>
+                        <p>Collaboration information is not available for this researcher</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="ls-coauth-header">
+                    <h3>Research Collaborators</h3>
+                    <p>Researchers who co-authored papers</p>
+                </div>
+                <div class="ls-coauth-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="input-field" id="coauth-search"
+                        placeholder="Search co-authors..." onkeyup="filterCoauthors()">
+                </div>
+                <div class="ls-coauth-grid" id="coauth-grid">
+                    ${collaborators.map(c => {
+                const name = Array.isArray(c) ? c[0] : c.name;
+                const count = Array.isArray(c) ? c[1] : c.count;
+                return `
+                            <div class="ls-coauth-card" data-name="${name.toLowerCase()}">
+                                <div class="ls-coauth-card__avatar" style="background:${getAvatarColor(name)}">
+                                    ${getInitials(name)}
+                                </div>
+                                <div class="ls-coauth-card__info">
+                                    <span class="ls-coauth-card__name">${name}</span>
+                                    <span class="ls-coauth-card__count">${count} Joint Papers</span>
+                                </div>
+                                <button class="btn btn-outline ls-coauth-card__btn" onclick="searchCoauthor('${name.replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-search"></i> Search in Database
+                                </button>
+                            </div>
+                        `;
+            }).join('')}
+                </div>
+            `;
         }
-    }
 
-// --- 3. DASHBOARD LOGIC  ---
-
-    function updateDashboard() {
-        const total = filteredData.length;
-        const uniCounts = {};
-        const topicCounts = {};
-        const subCounts = {}; // This is for Work Domains
-
-        filteredData.forEach(d => {
-            // 1. Count Unis 
-            let uni = cleanAffiliation(d.affiliation);
-            if (uni && uni.length > 2) {
-                uniCounts[uni] = (uniCounts[uni] || 0) + 1;
-            }
-
-            // 2. Count Main Topics 
-            const topic = d.main_topic || "Uncategorized";
-            topicCounts[topic] = (topicCounts[topic] || 0) + 1;
-
-            // 3. Count Work Domains / Subtopics 
-            
-            if (d.subtopics) {
-                
-                // Split by slash, comma, semicolon, or bullet points
-                const domains = d.subtopics.split(/[\/,;•]/); 
-                
-                domains.forEach(domain => {
-                    
-                    let cleanDomain = domain.trim();
-                    
-                    
-                    if(cleanDomain && cleanDomain.length > 1 && !IGNORED_LOCATIONS.some(loc => cleanDomain.toLowerCase() === loc.toLowerCase())) {
-                        
-                        
-                        subCounts[cleanDomain] = (subCounts[cleanDomain] || 0) + 1;
-                    }
-                });
-            }
-        });
-
-        // Sorting & Preparing Data
-        const sortedUnis = Object.entries(uniCounts).sort((a,b) => b[1] - a[1]);
-        const sortedTopics = Object.entries(topicCounts).sort((a,b) => b[1] - a[1]);
-        
-        
-        const sortedSubs = Object.entries(subCounts).sort((a,b) => b[1] - a[1]).slice(0, 20);
-
-        // Update Text Stats
-        document.getElementById('dash-total').innerText = total;
-        document.getElementById('dash-top-topic').innerText = sortedTopics.length > 0 ? sortedTopics[0][0] : '-';
-        document.getElementById('dash-top-uni').innerText = sortedUnis.length > 0 ? sortedUnis[0][0] : '-';
-
-        // Theme Colors
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const textColor = isDark ? '#f1f5f9' : '#111827';
-        const gridColor = isDark ? '#2a2f3a' : '#e5e7eb';
-
-        // Render Charts
-        renderChart('chart-uni', 'bar', sortedUnis.slice(0, 10), 'Universities', textColor, gridColor);
-        renderChart('chart-topic', 'doughnut', sortedTopics, 'Topics', textColor, gridColor);
-        
-        
-        renderChart('chart-subtopic', 'bar', sortedSubs, 'Work Domains (Detailed)', textColor, gridColor);
-    }
-
-
-    function renderChart(canvasId, type, dataEntries, label, textColor, gridColor) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
-
-        const labels = dataEntries.map(e => e[0]);
-        const values = dataEntries.map(e => e[1]);
-        const bgColors = ['#3b82f6', '#10b981', '#a855f7', '#f59e0b', '#ef4444', '#6366f1', '#ec4899', '#14b8a6', '#f97316', '#8b5cf6'];
-
-        chartInstances[canvasId] = new Chart(ctx, {
-            type: type,
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: label,
-                    data: values,
-                    backgroundColor: bgColors.slice(0, values.length),
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: type === 'doughnut', labels: { color: textColor } },
-                    title: { display: false }
-                },
-                scales: type === 'bar' ? {
-                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
-                    x: { grid: { display: false }, ticks: { color: textColor } }
-                } : {}
-            }
-        });
-    }
-
-    // --- 4. DETAILS VIEW & CO-AUTHOR NETWORK ---
-
-    async function analyzeLocal(id) {
-        if (window.innerWidth < 900) document.getElementById('main-view').scrollIntoView({ behavior: 'smooth' });
-
-        const view = document.getElementById('detail-content');
-        view.innerHTML = `
-            <div style="text-align:center; margin-top:50px;">
-                <i class="fas fa-circle-notch fa-spin" style="font-size:3rem; color:var(--success); margin-bottom:20px;"></i>
-                <h3 style="color:var(--text-main);">Syncing with Live APIs...</h3>
-            </div>
-        `;
-        
-        try {
-            const res = await fetch('/api/local-researchers/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id })
+        function filterCoauthors() {
+            const q = (document.getElementById('coauth-search')?.value || '').toLowerCase();
+            document.querySelectorAll('.ls-coauth-card').forEach(card => {
+                card.style.display = card.dataset.name.includes(q) ? '' : 'none';
             });
-            const data = await res.json();
-            renderProfile(data, view);
-        } catch (e) {
-            view.innerHTML = `<div style="color:var(--danger)">Analysis failed.</div>`;
         }
-    }
 
-    function renderProfile(data, container) {
-        const { local, author, collaborators } = data;
-        const cleanUni = cleanAffiliation(local.affiliation);
-        
-        // Links
-        const gsLink = local.scholar_id 
-            ? (local.scholar_id.match(/^\d+$/) ? `https://www.semanticscholar.org/author/${local.scholar_id}` : `https://scholar.google.com/citations?user=${local.scholar_id}&hl=en`)
-            : null;
+        async function searchCoauthor(name) {
+            /* Try to find in our local DB first */
+            try {
+                const res = await fetch(`/api/local-researchers/filter?researcher=${encodeURIComponent(name)}`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.length > 0) {
+                    loadAuthorProfile(data[0].id);
+                    return;
+                }
+            } catch (e) { }
 
-        // Render Co-Authors (Network)
-        let networkHtml = '';
-        if (collaborators && collaborators.length > 0) {
-            networkHtml = `
-                <div class="section-title"><i class="fas fa-network-wired"></i> Top Co-Authors (Citation Network)</div>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
-                    ${collaborators.map(c => `
-                        <a href="https://www.semanticscholar.org/author/${c.id}" target="_blank" 
-                           style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; 
-                                  border-radius:20px; text-decoration:none; color:var(--text-main); font-size:0.85rem;
-                                  display:flex; align-items:center; gap:8px; transition:0.2s;">
-                            <i class="fas fa-user-friends" style="color:var(--accent);"></i>
-                            ${c.name}
-                            <span style="background:var(--bg-body); padding:2px 6px; border-radius:10px; font-size:0.7rem; color:var(--text-muted);">
-                                ${c.count}x
-                            </span>
-                        </a>
-                    `).join('')}
+            /* Not found — fill search and suggest scanner */
+            backToList();
+            document.getElementById('f-researcher').value = name;
+            filterResearchers();
+        }
+
+
+        /* ── TAB 3: CITATION NETWORK ── */
+        function renderCitationsTab(container) {
+            const { author } = profileData;
+            if (!author || !author.papers || author.papers.length === 0) {
+                container.innerHTML = `
+                    <div class="ls-tab-empty">
+                        <i class="fas fa-quote-right"></i>
+                        <h3>No citation data available</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            const papers = [...author.papers].sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0));
+            const totalCitations = papers.reduce((s, p) => s + (p.citationCount || 0), 0);
+            const mostCited = papers[0];
+
+            /* Peak year */
+            const yearCounts = {};
+            papers.forEach(p => { if (p.year) yearCounts[p.year] = (yearCounts[p.year] || 0) + 1; });
+            const peakYear = Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0];
+
+            container.innerHTML = `
+                <div class="ls-coauth-header">
+                    <h3>Citation Network</h3>
+                    <p>Papers that cite this author's work</p>
+                </div>
+
+                <div class="ls-cite-summary">
+                    <div class="ls-cite-summary__item">
+                        <span class="ls-cite-summary__num">${totalCitations.toLocaleString()}</span>
+                        <span class="ls-cite-summary__label">Total Citations</span>
+                    </div>
+                    <div class="ls-cite-summary__item">
+                        <span class="ls-cite-summary__label">Most cited paper</span>
+                        <span class="ls-cite-summary__text">${mostCited.title}</span>
+                    </div>
+                    ${peakYear ? `
+                    <div class="ls-cite-summary__item">
+                        <span class="ls-cite-summary__num">${peakYear[0]}</span>
+                        <span class="ls-cite-summary__label">Peak year (${peakYear[1]} papers)</span>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="ls-cite-list">
+                    ${papers.slice(0, 20).map(p => {
+                const hasOA = p.openAccessPdf && p.openAccessPdf.url;
+                return `
+                            <div class="ls-cite-row">
+                                <div class="ls-cite-row__info">
+                                    <a href="${p.url || '#'}" target="_blank" class="ls-cite-row__title">${p.title}</a>
+                                    <span class="ls-cite-row__year">${p.year || '—'}</span>
+                                </div>
+                                <div class="ls-cite-row__right">
+                                    <span class="ls-cite-row__count">${p.citationCount || 0} citations</span>
+                                    ${hasOA ? `<a href="${p.openAccessPdf.url}" target="_blank" class="ls-paper__icon ls-paper__icon--oa ls-paper__icon--sm"><i class="fas fa-download"></i></a>` : ''}
+                                </div>
+                            </div>
+                        `;
+            }).join('')}
                 </div>
             `;
-        } else {
-             networkHtml = `
-                <div class="section-title"><i class="fas fa-network-wired"></i> Network</div>
-                <div style="color:var(--text-muted); font-style:italic;">No collaboration data found.</div>
-            `;
         }
 
-        let statsHtml = '';
-        if (author) {
-            statsHtml = `
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin: 20px 0;">
-                    <div style="background:var(--bg-body); padding:10px; border-radius:8px; border:1px solid var(--border); text-align:center;">
-                        <div style="font-size:1.5rem; font-weight:bold; color:var(--success)">${author.hIndex || '?'}</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted)">H-Index</div>
-                    </div>
-                    <div style="background:var(--bg-body); padding:10px; border-radius:8px; border:1px solid var(--border); text-align:center;">
-                        <div style="font-size:1.5rem; font-weight:bold; color:var(--accent)">${author.citationCount || '?'}</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted)">Citations</div>
-                    </div>
-                    <div style="background:var(--bg-body); padding:10px; border-radius:8px; border:1px solid var(--border); text-align:center;">
-                        <div style="font-size:1.5rem; font-weight:bold; color:#a855f7">${author.paperCount || '?'}</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted)">Papers</div>
-                    </div>
-                </div>
-            `;
-        }
 
-        container.innerHTML = `
-            <div style="text-align:left; width:100%;">
-                <div style="border-bottom:1px solid var(--border); padding-bottom:15px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div>
-                        <h1 style="margin:0; font-family:var(--font-header); font-size:2rem; color:var(--text-main);">${local.name}</h1>
-                        <div style="color:var(--text-muted); font-size:1rem; margin-top:5px;">
-                            <i class="fas fa-university" style="color:var(--accent);"></i> ${cleanUni}
+        /* ── TAB 4: ANALYTICS ── */
+        function renderAnalyticsTab(container) {
+            const { author, collaborators } = profileData;
+
+            if (!author || !author.papers || author.papers.length === 0) {
+                container.innerHTML = `
+                    <div class="ls-tab-empty">
+                        <i class="fas fa-chart-bar"></i>
+                        <h3>No analytics data available</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            const papers = author.papers;
+
+            /* 1. Publications by Year */
+            const yearMap = {};
+            papers.forEach(p => { if (p.year) yearMap[p.year] = (yearMap[p.year] || 0) + 1; });
+            const years = Object.entries(yearMap).sort((a, b) => a[0] - b[0]).slice(-10);
+            const maxPapers = Math.max(...years.map(y => y[1]));
+
+            /* 2. Fields Distribution */
+            const fieldMap = {};
+            papers.forEach(p => {
+                (p.fieldsOfStudy || []).forEach(f => { fieldMap[f] = (fieldMap[f] || 0) + 1; });
+            });
+            const fields = Object.entries(fieldMap).sort((a, b) => b[1] - a[1]);
+
+            /* 3. Title Keywords */
+            const stopWords = new Set(['the', 'a', 'an', 'of', 'in', 'for', 'and', 'on', 'to', 'with', 'by', 'is', 'at', 'from', 'using', 'via', 'based', 'its']);
+            const wordMap = {};
+            papers.forEach(p => {
+                p.title.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).forEach(w => {
+                    if (w.length > 2 && !stopWords.has(w)) wordMap[w] = (wordMap[w] || 0) + 1;
+                });
+            });
+            const topWords = Object.entries(wordMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const maxWord = topWords.length > 0 ? topWords[0][1] : 1;
+
+            /* 4. Collaboration Stats */
+            const collabs = collaborators || [];
+            const totalCollabs = collabs.reduce((s, c) => s + (Array.isArray(c) ? c[1] : c.count || 0), 0);
+            const topCollab = collabs.length > 0 ? (Array.isArray(collabs[0]) ? collabs[0][0] : collabs[0].name) : '—';
+
+            container.innerHTML = `
+                <div class="ls-analytics-grid">
+
+                    <!-- Publications by Year -->
+                    <div class="ls-analytics-card">
+                        <h4 class="ls-analytics-card__title"><i class="fas fa-chart-bar"></i> Publications by Year</h4>
+                        <div class="ls-bar-chart">
+                            ${years.map(([y, c]) => `
+                                <div class="ls-bar-chart__col">
+                                    <div class="ls-bar-chart__bar" style="height:${(c / maxPapers) * 100}%">
+                                        <span class="ls-bar-chart__val">${c}</span>
+                                    </div>
+                                    <span class="ls-bar-chart__label">${y}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
-                     ${gsLink ? `<a href="${gsLink}" target="_blank" class="btn-action"><i class="fas fa-external-link-alt"></i> Profile</a>` : ''}
-                </div>
 
-                <div style="background:var(--bg-card); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:20px;">
-                    <div><strong style="color:var(--text-muted)">Topic:</strong> ${local.main_topic || 'N/A'}</div>
-                    <div style="margin-top:5px;"><strong style="color:var(--text-muted)">Domain:</strong> <span style="color:var(--accent)">${(local.subtopics || '').replace(/\//g, ' • ')}</span></div>
-                </div>
-
-                ${statsHtml}
-                
-                ${networkHtml}
-
-                <div class="section-title"><i class="fas fa-scroll"></i> Recent Publications</div>
-                <div style="max-height:300px; overflow-y:auto; padding-right:5px;">
-                    ${author && author.papers ? author.papers.slice(0, 8).map(p => `
-                        <div class="paper-row">
-                            <span style="color:var(--accent); font-weight:bold;">${p.year || '-'}</span>
-                            <div><a href="${p.url}" target="_blank" style="color:var(--text-main); font-weight:500; text-decoration:none;">${p.title}</a></div>
+                    <!-- Research Fields -->
+                    <div class="ls-analytics-card">
+                        <h4 class="ls-analytics-card__title"><i class="fas fa-tags"></i> Research Fields Distribution</h4>
+                        <div class="ls-field-pills">
+                            ${fields.map(([f, c]) => `<span class="ls-field-pill">${f} <strong>(${c})</strong></span>`).join('')}
                         </div>
-                    `).join('') : '<div style="color:var(--text-muted)">No paper data available.</div>'}
+                    </div>
+
+                    <!-- Top Keywords -->
+                    <div class="ls-analytics-card">
+                        <h4 class="ls-analytics-card__title"><i class="fas fa-key"></i> Top Keywords</h4>
+                        <div class="ls-keyword-cloud">
+                            ${topWords.map(([w, c]) => {
+                const size = 0.7 + (c / maxWord) * 0.6;
+                return `<span class="ls-keyword" style="font-size:${size}rem">${w} (${c})</span>`;
+            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Collaboration Stats -->
+                    <div class="ls-analytics-card">
+                        <h4 class="ls-analytics-card__title"><i class="fas fa-handshake"></i> Collaboration Stats</h4>
+                        <div class="ls-collab-stats">
+                            <div class="ls-collab-stats__row">
+                                <span class="ls-collab-stats__label">Unique co-authors</span>
+                                <span class="ls-collab-stats__val">${collabs.length}</span>
+                            </div>
+                            <div class="ls-collab-stats__row">
+                                <span class="ls-collab-stats__label">Total collaborations</span>
+                                <span class="ls-collab-stats__val">${totalCollabs}</span>
+                            </div>
+                            <div class="ls-collab-stats__row">
+                                <span class="ls-collab-stats__label">Most frequent collaborator</span>
+                                <span class="ls-collab-stats__val">${topCollab}</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
-        `;
+            `;
+        }
+    </script>
 
-        document.getElementById('view-details').style.display = 'block';
-        document.getElementById('view-dashboard').style.display = 'none';
-        document.getElementById('btn-list-mode').classList.add('active');
-        document.getElementById('btn-dash-mode').classList.remove('active');
-    }
-
-    // --- UPLOAD LOGIC ---
-    async function uploadDatabase() {
-        const fileInput = document.getElementById('csv-file');
-        if(fileInput.files.length === 0) return Swal.fire('Error', 'Select file', 'error');
-        
-        const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
-        formData.append('main_topic', document.getElementById('csv-topic').value);
-        formData.append('clear_db', 'false');
-
-        try {
-            const res = await fetch('/api/admin/upload-researchers', { method: 'POST', body: formData });
-            const data = await res.json();
-            if(res.ok) {
-                Swal.fire('Success', data.message, 'success');
-                fetchMainTopics(); 
-                initialLoad(); 
-            } else Swal.fire('Error', data.error, 'error');
-        } catch(e) { Swal.fire('Error', 'Failed', 'error'); }
-    }
-</script>
 </body>
+
 </html>

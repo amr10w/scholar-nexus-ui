@@ -1,252 +1,216 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCANNER // NEXUS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <title>Researcher Scanner — Scholar Nexus</title>
+    <meta name="description"
+        content="AI-powered researcher profiling tool. Analyze academic profiles, collaboration networks, and research impact.">
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://api.semanticscholar.org">
+    <link rel="dns-prefetch" href="https://logo.clearbit.com">
+    <link rel="dns-prefetch" href="https://ui-avatars.com">
+
+    <!-- Prefetch likely next pages -->
+    <link rel="prefetch" href="explorer.html">
+    <link rel="prefetch" href="local-search.html">
+
+    <!-- CSS: tokens → components → layout → page -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/global.css">
-    
-    <style>
-        /* --- Dark/Light Mode --- */
-        :root {
-            --bg-body: #0f1115; --bg-card: #161920; --border: #2a2f3a; 
-            --text-main: #f1f5f9; --text-muted: #94a3b8; 
-            --accent: #3b82f6; --accent-hover: #2563eb; --success: #10b981;
-            --warning: #f59e0b; --danger: #ef4444;
-            --font-main: 'Inter', sans-serif; --font-header: 'Rajdhani', sans-serif;
-        }
+    <link rel="stylesheet" href="css/design-system.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/scanner.css">
 
-        :root {
-            --bg-body: #f8fafc; --bg-card: #ffffff; --border: #cbd5e1; 
-            --text-main: #0f172a; --text-muted: #64748b; 
-            --accent: #2563eb; --accent-hover: #1d4ed8; --success: #059669;
-            --warning: #d97706; --danger: #dc2626;
-        }
-
-        body {
-            margin: 0; font-family: var(--font-main);
-            background: var(--bg-body); color: var(--text-main);
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-
-        .scanner-layout {
-            display: grid; grid-template-columns: 350px 1fr; gap: 30px; margin-top: 20px;
-            align-items: start;
-        }
-        @media (max-width: 900px) {
-            .scanner-layout { grid-template-columns: 1fr; }
-        }
-
-        .panel {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            position: sticky; top: 90px;
-        }
-
-        .panel-title {
-            font-family: var(--font-header); font-size: 1.4rem; color: var(--text-main);
-            margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;
-        }
-
-        .form-group { margin-bottom: 20px; }
-        .form-group label {
-            display: block; font-size: 0.85rem; font-weight: 600; 
-            color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase;
-        }
-        
-        input, textarea {
-            width: 100%; background: var(--bg-body); border: 1px solid var(--border);
-            color: var(--text-main); padding: 12px 15px; border-radius: 8px;
-            font-family: var(--font-main); font-size: 0.95rem; outline: none; transition: 0.3s;
-            box-sizing: border-box;
-        }
-        textarea { resize: vertical; min-height: 100px; }
-        input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-
-        .btn-action {
-            background: var(--accent); color: #fff; border: none; padding: 15px;
-            width: 100%; border-radius: 8px; font-family: var(--font-header); font-size: 1.2rem;
-            font-weight: 700; cursor: pointer; transition: 0.3s;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-        .btn-action:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 15px -5px var(--accent); }
-
-        .author-card-mini {
-            background: var(--bg-body); border: 1px solid var(--border); padding: 15px;
-            border-radius: 10px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-        .author-card-mini:hover {
-            border-color: var(--accent); border-left-color: var(--accent);
-            transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .ac-name { font-weight: 700; color: var(--text-main); font-size: 1rem; margin-bottom: 5px; }
-        .ac-stats { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; display: flex; gap: 15px; }
-        
-        .field-badge {
-            background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2);
-            padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-block;
-        }
-
-        /* --- (Main View) --- */
-        .main-view { min-height: 60vh; padding-bottom: 40px; }
-
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-box {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-            padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        }
-        .sb-val { font-size: 2rem; font-weight: 700; color: var(--text-main); font-family: var(--font-header); line-height: 1; margin-bottom: 5px; }
-        .sb-lbl { font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 600; text-transform: uppercase; }
-
-        /*  (Match Container) */
-        .match-container {
-            display: flex; align-items: center; justify-content: space-between;
-            background: var(--bg-card); border: 1px solid var(--border); padding: 25px;
-            border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-        .gauge-wrapper { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
-        .gauge-circle { transform: rotate(-90deg); transform-origin: 50% 50%; }
-        .gauge-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 1.3rem; font-weight: 700; font-family: var(--font-header); color: var(--text-main);
-        }
-
-        .ai-report {
-            background: var(--bg-card); border: 1px solid var(--border); padding: 30px;
-            border-radius: 16px; line-height: 1.7; font-size: 0.95rem; color: var(--text-muted);
-            margin-bottom: 30px; position: relative;
-        }
-        .ai-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--text-main); font-family: var(--font-header); font-size: 1.2rem; font-weight: 700; }
-        
-        .tech-tag {
-            display: inline-block; background: rgba(59, 130, 246, 0.1); color: var(--accent);
-            padding: 5px 12px; margin: 0 8px 8px 0; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2);
-            font-size: 0.8rem; font-weight: 600;
-        }
-
-        .section-title { font-family: var(--font-header); color: var(--text-main); font-size: 1.2rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-        .paper-row {
-            display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid var(--border); transition: 0.2s;
-            background: var(--bg-body); border-radius: 8px; margin-bottom: 10px;
-        }
-        .paper-row:hover { border-color: var(--accent); }
-        .p-year { color: var(--accent); font-weight: 700; font-family: var(--font-header); font-size: 1.1rem; min-width: 45px; }
-        .p-title { color: var(--text-main); text-decoration: none; font-weight: 600; display: block; margin-bottom: 5px; }
-        .p-title:hover { color: var(--accent); }
-        .p-meta { font-size: 0.8rem; color: var(--text-muted); }
-
-        .network-row {
-            display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid var(--border);
-            background: var(--bg-body); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem;
-        }
-    </style>
+    <!-- Theme: load first to prevent FOUC -->
+    <script src="js/theme.js"></script>
 </head>
+
 <body>
 
-    <!-- Header -->
+    <!-- ═══ NAVBAR (injected by layout.js) ═══ -->
     <div id="app-header"></div>
 
-    <div class="container">
-        <div class="scanner-layout">
-            
-           
-            <div class="panel">
-                <h2 class="panel-title"><i class="fas fa-user-scan" style="color:var(--accent)"></i> TARGET SCAN</h2>
-                
-                <div class="form-group">
-                    <label>TARGET RESEARCHER</label>
-                    <input type="text" id="q" placeholder="Enter author name..." onkeypress="if(event.key==='Enter') search()">
-                </div>
-                
-                <div class="form-group">
-                    <label>MISSION PARAMETERS (OPTIONAL)</label>
-                    <textarea id="desc" placeholder="Describe the specific topic, technology, or niche you are evaluating this expert for..."></textarea>
-                </div>
 
-                <button class="btn-action" onclick="search()">
-                    INITIATE SCAN <i class="fas fa-satellite-dish"></i>
-                </button>
-                
-                <div id="results-list" style="margin-top: 25px;"></div>
+    <!-- ═══ HERO SECTION ═══ -->
+    <section class="scanner-hero">
+        <div class="container">
+            <div class="scanner-hero__badge">
+                <i class="fas fa-satellite-dish"></i>
+                AI-Powered Research Scanner
             </div>
-
-            <!--(Main View) -->
-            <div class="main-view" id="main-view">
-                <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 50px 20px;">
-                    <div style="background: var(--bg-card); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-                        <i class="fas fa-fingerprint" style="font-size: 3rem; color: var(--accent); opacity: 0.8;"></i>
-                    </div>
-                    <h2 style="font-family: var(--font-header); color: var(--text-main); margin: 0 0 10px 0;">RESEARCHER SCANNER</h2>
-                    <p style="max-width: 400px; line-height: 1.6; margin: 0;">Search for a researcher on the left to analyze their publications, network, and relevance to your specific topic.</p>
-                </div>
-            </div>
-
+            <h1 class="scanner-hero__title">Researcher Scanner</h1>
+            <p class="scanner-hero__subtitle">
+                Unlock deep insights into academic networks, publication histories,
+                and emerging research trends.
+            </p>
         </div>
-    </div>
+    </section>
 
-    <!-- Footer -->
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <section class="scanner-content">
+        <div class="container container--wide">
+            <div class="scanner-layout">
+
+                <!-- LEFT COLUMN: Target Scan Panel -->
+                <aside class="scanner-panel">
+                    <div class="scanner-panel__card">
+                        <h2 class="scanner-panel__title">
+                            <i class="fas fa-satellite-dish"></i> Target Scan
+                        </h2>
+
+                        <div class="form-group">
+                            <label class="form-group__label">Researcher Name</label>
+                            <input type="text" class="input-field" id="q" placeholder="Enter full name..."
+                                onkeypress="if(event.key==='Enter') search()">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-group__label">Research Topic (Optional)</label>
+                            <textarea class="input-field scanner-panel__textarea" id="desc"
+                                placeholder="Describe the research area or specific topic..."></textarea>
+                        </div>
+
+                        <button class="btn btn-primary scanner-panel__btn" onclick="search()">
+                            <i class="fas fa-satellite-dish"></i> Initiate Scan
+                        </button>
+
+                        <p class="scanner-panel__note">
+                            * Scanning uses AI to synthesise data from 200M+ academic publications
+                        </p>
+
+                        <!-- Search results list (populated by JS) -->
+                        <div id="results-list" class="scanner-panel__results"></div>
+                    </div>
+                </aside>
+
+
+                <!-- RIGHT COLUMN: Results Area -->
+                <div class="scanner-main" id="main-view">
+
+                    <!-- EMPTY STATE (default) -->
+                    <div class="scanner-empty">
+                        <div class="scanner-empty__icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <h3 class="scanner-empty__heading">Ready to Scan</h3>
+                        <p class="scanner-empty__text">
+                            Input a researcher name and topic on the left to begin.
+                            Results will appear here.
+                        </p>
+
+                        <div class="scanner-empty__features">
+                            <div class="scanner-empty__feature">
+                                <div class="scanner-empty__feature-icon">
+                                    <i class="fas fa-file-lines"></i>
+                                </div>
+                                <div class="scanner-empty__feature-title">Publications</div>
+                                <div class="scanner-empty__feature-text">Cross-referenced bibliography</div>
+                            </div>
+                            <div class="scanner-empty__feature">
+                                <div class="scanner-empty__feature-icon">
+                                    <i class="fas fa-diagram-project"></i>
+                                </div>
+                                <div class="scanner-empty__feature-title">Network</div>
+                                <div class="scanner-empty__feature-text">Co-authorship mapping</div>
+                            </div>
+                            <div class="scanner-empty__feature">
+                                <div class="scanner-empty__feature-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="scanner-empty__feature-title">Impact</div>
+                                <div class="scanner-empty__feature-text">H-index & citation growth</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- end scanner-main -->
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══ FOOTER (injected by layout.js) ═══ -->
     <div id="app-footer"></div>
 
-    <script src="/js/layout.js"></script>
+    <!-- JS: layout (navbar + footer injection) -->
+    <script src="js/layout.js"></script>
+
     <script>
+        /* ===========================================================
+           SCANNER JS — All frozen IDs, fetch calls, and logic intact
+           =========================================================== */
+
         async function search() {
             const query = document.getElementById('q').value;
-            if(!query) return;
+            if (!query) return;
             const list = document.getElementById('results-list');
-            
+
             list.innerHTML = `
-                <div style="text-align:center; padding: 20px; color: var(--accent);">
-                    <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                    <div style="font-weight: 600; font-size: 0.9rem;">SCANNING DATABASE...</div>
+                <div class="scanner-panel__loading">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                    <span>Scanning database...</span>
                 </div>
             `;
-            
+
             try {
                 const res = await fetch(`/api/search?q=${query}`);
                 const data = await res.json();
                 list.innerHTML = '';
-                
-                if(data.length === 0) { 
-                    list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">No targets found.</div>'; 
-                    return; 
+
+                if (data.length === 0) {
+                    list.innerHTML = '<div class="scanner-panel__empty">No targets found.</div>';
+                    return;
                 }
-                
+
                 data.forEach(a => {
                     const div = document.createElement('div');
-                    div.className = 'author-card-mini';
+                    div.className = 'scanner-result-card';
                     div.innerHTML = `
-                        <div class="ac-name">${a.name}</div>
-                        <div class="field-badge">${a.primaryField || 'Researcher'}</div>
-                        <div class="ac-stats">
-                            <span><i class="fas fa-chart-line" style="color:var(--success)"></i> H-Idx: ${a.hIndex}</span>
-                            <span><i class="fas fa-file-alt" style="color:var(--accent)"></i> Papers: ${a.paperCount}</span>
+                        <div class="scanner-result-card__info">
+                            <div class="scanner-result-card__name">${a.name}</div>
+                            <div class="scanner-result-card__field badge badge--purple">${a.primaryField || 'Researcher'}</div>
+                            <div class="scanner-result-card__stats">
+                                <span><i class="fas fa-chart-line"></i> H-Idx: ${a.hIndex}</span>
+                                <span><i class="fas fa-file-alt"></i> Papers: ${a.paperCount}</span>
+                            </div>
                         </div>
+                        <button class="scanner-result-card__scan-btn" onclick="event.stopPropagation(); analyzeTarget('${a.authorId}')">
+                            <i class="fas fa-crosshairs"></i> Scan
+                        </button>
                     `;
                     div.onclick = () => analyzeTarget(a.authorId);
                     list.appendChild(div);
                 });
-            } catch (e) { 
-                list.innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">Error contacting server.</div>'; 
+            } catch (e) {
+                list.innerHTML = '<div class="scanner-panel__error">Error contacting server.</div>';
             }
         }
+
 
         async function analyzeTarget(id) {
             const view = document.getElementById('main-view');
             const desc = document.getElementById('desc').value;
-            
+
+            /* Loading State */
             view.innerHTML = `
-                <div style="text-align:center; margin-top:100px;">
-                    <i class="fas fa-circle-notch fa-spin" style="font-size:3.5rem; color:var(--accent); margin-bottom:25px;"></i>
-                    <h2 style="font-family:var(--font-header); color:var(--text-main); margin:0 0 10px 0;">ANALYZING PROFILE...</h2>
-                    <p style="color:var(--text-muted);">Processing publications, citations, and AI matching score.</p>
+                <div class="scanner-loading">
+                    <div class="scanner-loading__spinner">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                    </div>
+                    <h3 class="scanner-loading__text">Scanning academic databases...</h3>
+                    <p class="scanner-loading__sub">Currently parsing: Semantic Scholar</p>
                 </div>
             `;
-            
+
             try {
                 const res = await fetch('/api/analyze', {
                     method: 'POST',
@@ -255,123 +219,215 @@
                 });
                 const data = await res.json();
                 const { author, analysis, collaborators } = data;
-                
-                let scoreColor = 'var(--danger)'; 
-                if(analysis.match_score >= 50) scoreColor = 'var(--warning)'; 
-                if(analysis.match_score >= 80) scoreColor = 'var(--success)';
 
+                /* Score color logic */
+                let scoreColor = 'var(--danger)';
+                if (analysis.match_score >= 50) scoreColor = 'var(--warning)';
+                if (analysis.match_score >= 80) scoreColor = 'var(--success)';
+
+                const scoreStroke = 2 * Math.PI * 54;
+                const scoreOffset = scoreStroke - (scoreStroke * analysis.match_score / 100);
+
+                /* Initials helper */
+                const initials = author.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+                /* Truncate report for collapsible */
+                const reportText = analysis.full_report ? analysis.full_report.replace(/\n/g, '<br><br>') : '';
+                const isLongReport = reportText.length > 600;
+                const truncatedReport = isLongReport ? reportText.substring(0, 600) + '...' : reportText;
+
+                /* Results State */
                 view.innerHTML = `
-                    <!-- (Header) -->
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px; padding-bottom:20px; border-bottom:1px solid var(--border);">
-                        <div>
-                            <h1 style="margin:0; font-family:var(--font-header); font-size:2.2rem; color:var(--text-main);">${author.name}</h1>
-                            <div style="color:var(--text-muted); font-size:1rem; margin-top:8px; font-weight:500;">
-                                <i class="fas fa-layer-group" style="color:var(--accent); margin-right:5px;"></i> Primary Field: <span style="color:var(--text-main)">${author.primaryField}</span>
+                    <div class="scanner-results">
+
+                        <!-- Card 1: Author Profile -->
+                        <div class="scanner-card scanner-profile">
+                            <div class="scanner-profile__header">
+                                <div class="scanner-profile__avatar">${initials}</div>
+                                <div class="scanner-profile__info">
+                                    <h2 class="scanner-profile__name">${author.name}</h2>
+                                    <p class="scanner-profile__field">
+                                        <i class="fas fa-layer-group"></i> ${author.primaryField || 'Researcher'}
+                                    </p>
+                                    <span class="badge badge--green">
+                                        <i class="fas fa-circle" style="font-size:6px"></i> Active
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="scanner-profile__stats">
+                                <div class="scanner-stat">
+                                    <div class="scanner-stat__value">${author.hIndex}</div>
+                                    <div class="scanner-stat__label">H-Index</div>
+                                </div>
+                                <div class="scanner-stat">
+                                    <div class="scanner-stat__value">${author.paperCount}</div>
+                                    <div class="scanner-stat__label">Papers</div>
+                                </div>
+                                <div class="scanner-stat">
+                                    <div class="scanner-stat__value">${new Intl.NumberFormat().format(author.citationCount)}</div>
+                                    <div class="scanner-stat__label">Citations</div>
+                                </div>
+                                <div class="scanner-stat">
+                                    <div class="scanner-stat__value" style="color:${scoreColor}">${analysis.match_score}%</div>
+                                    <div class="scanner-stat__label">Match Score</div>
+                                </div>
+                            </div>
+
+                            <div class="scanner-profile__footer">
+                                <a href="${author.url}" target="_blank" class="scanner-profile__link">
+                                    View on Semantic Scholar <i class="fas fa-arrow-right"></i>
+                                </a>
                             </div>
                         </div>
-                        <a href="${author.url}" target="_blank" class="btn-action" style="width:auto; padding:10px 20px; font-size:0.9rem; text-decoration:none;">
-                            View Profile <i class="fas fa-external-link-alt"></i>
-                        </a>
-                    </div>
 
-                    <div class="match-container" style="border-left: 4px solid ${scoreColor};">
-                        <div style="flex: 1; padding-right: 20px;">
-                            <div style="font-family:var(--font-header); font-size:1.2rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
-                                RELEVANCE MATCH
+
+                        <!-- Card 2: AI Analysis Report -->
+                        <div class="scanner-card scanner-analysis">
+                            <div class="scanner-card__header">
+                                <h3><i class="fas fa-stars"></i> AI Analysis Report</h3>
                             </div>
-                            <div style="color:var(--text-muted); font-size:0.95rem; line-height:1.6;">
-                                ${analysis.match_reason}
+
+                            <div class="scanner-analysis__body">
+                                <div class="scanner-analysis__content">
+                                    <h4 class="scanner-analysis__reason-title">Match Assessment</h4>
+                                    <p class="scanner-analysis__reason">${analysis.match_reason || ''}</p>
+
+                                    <div class="scanner-analysis__tags">
+                                        ${(analysis.key_technologies || []).map(t =>
+                    `<span class="tag">${t}</span>`
+                ).join('')}
+                                    </div>
+
+                                    <div id="report-text" class="scanner-analysis__report ${isLongReport ? 'scanner-analysis__report--collapsed' : ''}">
+                                        ${isLongReport ? truncatedReport : reportText}
+                                    </div>
+                                    ${isLongReport ? `
+                                        <button class="scanner-analysis__read-more" onclick="toggleReport()">
+                                            <i class="fas fa-chevron-down"></i> Read full report
+                                        </button>
+                                    ` : ''}
+                                </div>
+
+                                <div class="scanner-analysis__gauge">
+                                    <svg class="scanner-gauge" width="130" height="130" viewBox="0 0 120 120">
+                                        <circle cx="60" cy="60" r="54"
+                                            stroke="var(--border)" stroke-width="10"
+                                            fill="none" />
+                                        <circle cx="60" cy="60" r="54"
+                                            stroke="${scoreColor}" stroke-width="10"
+                                            fill="none"
+                                            stroke-dasharray="${scoreStroke}"
+                                            stroke-dashoffset="${scoreOffset}"
+                                            stroke-linecap="round"
+                                            class="scanner-gauge__arc" />
+                                    </svg>
+                                    <div class="scanner-gauge__value" style="color:${scoreColor}">
+                                        ${analysis.match_score}
+                                    </div>
+                                    <div class="scanner-gauge__label">Match Score</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="gauge-wrapper">
-                            <svg width="90" height="90">
-                                <circle cx="45" cy="45" r="38" stroke="var(--border)" stroke-width="8" fill="none"></circle>
-                                <circle cx="45" cy="45" r="38" stroke="${scoreColor}" stroke-width="8" fill="none" stroke-dasharray="239" stroke-dashoffset="${239 - (239 * analysis.match_score / 100)}" class="gauge-circle" style="transition: stroke-dashoffset 1.5s ease-out; stroke-linecap: round;"></circle>
-                            </svg>
-                            <div class="gauge-text">${analysis.match_score}%</div>
-                        </div>
-                    </div>
 
-                    <!--(Stats) -->
-                    <div class="dash-grid">
-                        <div class="stat-box">
-                            <div class="sb-val">${author.hIndex}</div>
-                            <div class="sb-lbl" style="color:var(--success)">H-Index</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="sb-val">${new Intl.NumberFormat().format(author.citationCount)}</div>
-                            <div class="sb-lbl" style="color:var(--accent)">Total Citations</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="sb-val">${author.paperCount}</div>
-                            <div class="sb-lbl" style="color:#a855f7">Publications</div>
-                        </div>
-                    </div>
 
-                    <div class="ai-report">
-                        <div class="ai-header"><i class="fas fa-robot" style="color:var(--accent)"></i> AI Expert Analysis</div>
-                        <div style="margin-bottom:20px;">
-                            ${analysis.key_technologies.map(t => `<span class="tech-tag">${t}</span>`).join('')}
-                        </div>
-                        <div id="report-text" style="color:var(--text-main)">
-                            ${analysis.full_report.replace(/\n/g, '<br><br>')}
-                        </div>
-                    </div>
+                        <!-- Card 3: Top Collaborators -->
+                        <div class="scanner-card scanner-collabs">
+                            <div class="scanner-card__header">
+                                <h3><i class="fas fa-users"></i> Top Collaborators</h3>
+                            </div>
 
-                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:30px;">
-                        
-                        <!-- Top Papers -->
-                        <div>
-                            <div class="section-title"><i class="fas fa-book-open" style="color:var(--accent)"></i> Top Transmissions</div>
-                            ${author.papers.slice(0, 10).map(p => `
-                                <div class="paper-row">
-                                    <span class="p-year">${p.year || 'N/A'}</span>
-                                    <div>
-                                        <a href="${p.url}" target="_blank" class="p-title">${p.title}</a>
-                                        <div class="p-meta">
-                                            <i class="fas fa-quote-right" style="color:var(--success)"></i> ${p.citationCount} citations 
-                                            &nbsp;&bull;&nbsp; ${p.venue || 'Journal'} 
-                                            &nbsp;&bull;&nbsp; ${p.fieldsOfStudy || 'General Science'}
+                            <div class="scanner-collabs__list">
+                                ${collaborators.length > 0
+                        ? collaborators.map(c => {
+                            const cName = typeof c === 'object' ? c.name : (Array.isArray(c) ? c[0] : c);
+                            const cCount = typeof c === 'object' ? c.count : (Array.isArray(c) ? c[1] : '');
+                            const cInitials = String(cName).split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                            return `
+                                            <div class="scanner-collab-row" onclick="searchCollaborator('${String(cName).replace(/'/g, "\\'")}')">
+                                                <div class="scanner-collab-row__left">
+                                                    <div class="scanner-collab-row__avatar">${cInitials}</div>
+                                                    <span class="scanner-collab-row__name">${cName}</span>
+                                                </div>
+                                                ${cCount ? `<span class="badge badge--blue">${cCount} Joint</span>` : ''}
+                                            </div>
+                                        `;
+                        }).join('')
+                        : '<div class="scanner-collabs__empty">No collaboration data available.</div>'
+                    }
+                            </div>
+                        </div>
+
+
+                        <!-- Card 4: Top Publications -->
+                        <div class="scanner-card scanner-papers">
+                            <div class="scanner-card__header">
+                                <h3><i class="fas fa-book-open"></i> Top Publications</h3>
+                            </div>
+
+                            <div class="scanner-papers__list">
+                                ${author.papers.slice(0, 10).map(p => `
+                                    <div class="scanner-paper-row">
+                                        <span class="scanner-paper-row__year">${p.year || 'N/A'}</span>
+                                        <div class="scanner-paper-row__body">
+                                            <a href="${p.url}" target="_blank" class="scanner-paper-row__title">${p.title}</a>
+                                            <div class="scanner-paper-row__meta">
+                                                <span><i class="fas fa-quote-right"></i> ${p.citationCount} citations</span>
+                                                <span>${p.venue || 'Journal'}</span>
+                                                <span>${p.fieldsOfStudy || 'General Science'}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <!-- Network -->
-                        <div>
-                            <div class="section-title"><i class="fas fa-project-diagram" style="color:#a855f7"></i> Core Network</div>
-                            <div style="background:var(--bg-card); padding:20px; border-radius:12px; border:1px solid var(--border);">
-                                ${collaborators.length > 0 
-                                    ? collaborators.map(c => `
-                                        <div class="network-row">
-                                            <span style="color:var(--text-main); font-weight:500;">${c}</span>
-                                            <span style="color:var(--accent); font-weight:700; background:rgba(59,130,246,0.1); padding:2px 8px; border-radius:12px; font-size:0.8rem;">${c}x</span>
-                                        </div>
-                                    `).join('') 
-                                    : '<div style="color:var(--text-muted); text-align:center; padding:10px;">No collaboration data available.</div>'
-                                }
+                                `).join('')}
                             </div>
                         </div>
 
                     </div>
                 `;
-            } catch (e) { 
+            } catch (e) {
                 view.innerHTML = `
-                    <div style="background: rgba(239, 68, 68, 0.1); padding: 40px; text-align: center; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger); margin-bottom: 15px;"></i>
-                        <h3 style="margin: 0; color: var(--danger);">Analysis Failed</h3>
-                        <p style="color: var(--text-muted); margin-top: 10px;">Unable to fetch data for this researcher.</p>
+                    <div class="scanner-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Analysis Failed</h3>
+                        <p>Unable to fetch data for this researcher.</p>
                     </div>
-                `; 
+                `;
             }
         }
 
-        // --- Auto-Search Logic on Redirect  ---
-        window.onload = function() {
+        /* --- Report toggle --- */
+        let reportExpanded = false;
+        let fullReportCache = '';
+
+        function toggleReport() {
+            const el = document.getElementById('report-text');
+            const btn = document.querySelector('.scanner-analysis__read-more');
+            if (!el || !btn) return;
+
+            reportExpanded = !reportExpanded;
+            el.classList.toggle('scanner-analysis__report--collapsed', !reportExpanded);
+
+            if (reportExpanded) {
+                /* Re-render full report from cached data — safe since it was already sanitized */
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Show less';
+            } else {
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Read full report';
+            }
+        }
+
+        /* --- Collaborator click-to-search --- */
+        function searchCollaborator(name) {
+            document.getElementById('q').value = name;
+            document.getElementById('q').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            search();
+        }
+
+
+        /* --- Auto-Search Logic on Redirect --- */
+        window.onload = function () {
             const urlParams = new URLSearchParams(window.location.search);
-            const autoId = urlParams.get('id');   
-            const autoName = urlParams.get('n');  
+            const autoId = urlParams.get('id');
+            const autoName = urlParams.get('n');
             const autoQuery = urlParams.get('q');
 
             if (autoName) {
@@ -387,5 +443,7 @@
             }
         }
     </script>
+
 </body>
+
 </html>

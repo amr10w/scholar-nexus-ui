@@ -1,51 +1,212 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCHOLAR NEXUS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <title>Scholar Nexus — Discover Academic Excellence</title>
+    <meta name="description"
+        content="The unified platform for academic research, global networking, and career opportunities in science and technology.">
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://api.semanticscholar.org">
+    <link rel="dns-prefetch" href="https://logo.clearbit.com">
+    <link rel="dns-prefetch" href="https://ui-avatars.com">
+
+    <!-- Prefetch likely next pages -->
+    <link rel="prefetch" href="scanner.html">
+    <link rel="prefetch" href="explorer.html">
+    <link rel="prefetch" href="companies.html">
+
+    <!-- CSS: tokens → components → layout → page -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="css/design-system.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/index.css">
+
+    <!-- Theme: load first to prevent FOUC -->
+    <script src="js/theme.js"></script>
 </head>
+
 <body>
+
+    <!-- ═══ NAVBAR (injected by layout.js) ═══ -->
     <div id="app-header"></div>
 
-    <div class="container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 60vh;">
-        <h1 style="font-family: var(--font-header); font-size: 4rem; margin-bottom: 20px;">SCHOLAR NEXUS</h1>
-        <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin-bottom: 50px;">
-            The unified platform for academic research, global networking, and career opportunities.
-        </p>
-        
-        <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
-            <a href="/jobs" class="card-box" style="width: 250px; text-decoration: none; color: inherit; transition: 0.3s;">
-                <i class="fas fa-briefcase" style="font-size: 2.5rem; color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Jobs Portal</h3>
-                <small style="color: var(--text-muted);">Local DB & Map Filter</small>
-            </a>
 
-            <a href="/scanner" class="card-box" style="width: 250px; text-decoration: none; color: inherit; transition: 0.3s;">
-                <i class="fas fa-user-astronaut" style="font-size: 2.5rem; color: #a855f7; margin-bottom: 15px;"></i>
-                <h3>Researcher Scanner</h3>
-                <small style="color: var(--text-muted);">External API Analysis</small>
-            </a>
+    <!-- ═══ HERO SECTION ═══ -->
+    <section class="hero">
+        <div class="hero__glow hero__glow--1"></div>
+        <div class="hero__glow hero__glow--2"></div>
 
-            <a href="/hottopics" class="card-box" style="width: 250px; text-decoration: none; color: inherit; transition: 0.3s;">
-                <i class="fas fa-fire" style="font-size: 2.5rem; color: #f43f5e; margin-bottom: 15px;"></i>
-                <h3>Hot Topics</h3>
-                <small style="color: var(--text-muted);">Breakthrough Radar</small>
-            </a>
+        <div class="container">
+            <div class="hero__badge">
+                <i class="fas fa-sparkles"></i>
+                AI-Powered Academic Intelligence
+            </div>
 
-            <a href="/local-search" class="card-box" style="width: 250px; text-decoration: none; color: inherit; transition: 0.3s;">
-                <i class="fas fa-database" style="font-size: 2.5rem; color: #10b981; margin-bottom: 15px;"></i>
-                <h3>Database Search</h3>
-                <small style="color: var(--text-muted);">Internal Professor Network</small>
-            </a>
+            <h1 class="hero__title">
+                Discover Academic<br><span>Excellence</span>
+            </h1>
 
+            <p class="hero__subtitle">
+                The unified platform for academic research, global networking,
+                and career opportunities in science and technology.
+            </p>
+
+            <div class="hero__actions">
+                <a href="scanner.html" class="btn btn-lg btn-primary">
+                    <i class="fas fa-microscope"></i> Explore Researchers
+                </a>
+                <a href="jobs.html" class="btn btn-lg btn--hero-outline">
+                    <i class="fas fa-briefcase"></i> Browse Jobs
+                </a>
+            </div>
+
+            <div class="hero__stats">
+                <div class="hero__stat">
+                    <div class="hero__stat-value">200M+</div>
+                    <div class="hero__stat-label">Research Papers</div>
+                </div>
+                <div class="hero__stat">
+                    <div class="hero__stat-value">80M+</div>
+                    <div class="hero__stat-label">Researchers</div>
+                </div>
+                <div class="hero__stat">
+                    <div class="hero__stat-value">AI</div>
+                    <div class="hero__stat-label">Powered by Gemini</div>
+                </div>
+                <div class="hero__stat">
+                    <div class="hero__stat-value">232+</div>
+                    <div class="hero__stat-label">Companies</div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
+
+    <!-- ═══ NAVIGATION CARDS SECTION ═══ -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header section-header--center">
+                <h2 class="section-title">Everything You Need</h2>
+                <p class="section-subtitle">
+                    Powerful tools to explore the academic landscape, find opportunities,
+                    and connect with researchers worldwide.
+                </p>
+            </div>
+
+            <!-- GROUP 1: Academia -->
+            <div class="features__group-label">
+                <i class="fas fa-graduation-cap"></i> Academia
+            </div>
+            <div class="features__grid features__grid--3">
+
+                <a href="scanner.html" class="nav-card">
+                    <div class="nav-card__icon">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <h3 class="nav-card__title">Academia Scanner</h3>
+                    <p class="nav-card__desc">
+                        AI-powered researcher profiling
+                        and collaboration analysis
+                    </p>
+                    <span class="nav-card__link">Explore <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="explorer.html" class="nav-card">
+                    <div class="nav-card__icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3 class="nav-card__title">Paper Explorer</h3>
+                    <p class="nav-card__desc">
+                        Search millions of academic papers
+                        and discover research networks
+                    </p>
+                    <span class="nav-card__link">Explore <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="local-search.html" class="nav-card">
+                    <div class="nav-card__icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3 class="nav-card__title">Research Database</h3>
+                    <p class="nav-card__desc">
+                        Browse our curated database
+                        of local researchers and academics
+                    </p>
+                    <span class="nav-card__link">Explore <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+            </div>
+
+            <!-- GROUP 2: Industry -->
+            <div class="features__group-label features__group-label--industry">
+                <i class="fas fa-industry"></i> Industry
+            </div>
+            <div class="features__grid features__grid--2">
+
+                <a href="jobs.html" class="nav-card">
+                    <div class="nav-card__icon nav-card__icon--green">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="nav-card__title">Jobs Portal</h3>
+                    <p class="nav-card__desc">
+                        Explore opportunities at top
+                        tech and engineering companies
+                    </p>
+                    <span class="nav-card__link">Explore <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="companies.html" class="nav-card">
+                    <div class="nav-card__icon nav-card__icon--purple">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 class="nav-card__title">Companies Directory</h3>
+                    <p class="nav-card__desc">
+                        Directory of VLSI, Embedded Systems
+                        and Tech companies worldwide
+                    </p>
+                    <span class="nav-card__link">Explore <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══ CTA SECTION ═══ -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-section__inner">
+                <h2 class="cta-section__title">Ready to Get Started?</h2>
+                <p class="cta-section__text">
+                    Join thousands of researchers and institutions already using Scholar Nexus
+                    to accelerate their academic journey.
+                </p>
+                <div class="hero__actions">
+                    <a href="login.html" class="btn btn-lg btn-primary">
+                        <i class="fas fa-rocket"></i> Create Free Account
+                    </a>
+                    <a href="about.html" class="btn btn-lg btn--hero-outline">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══ FOOTER (injected by layout.js) ═══ -->
     <div id="app-footer"></div>
-    <script src="/js/layout.js"></script>
+
+    <!-- JS: layout (navbar + footer injection) -->
+    <script src="js/layout.js"></script>
+
 </body>
+
 </html>

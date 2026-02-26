@@ -1,92 +1,158 @@
-/* public/js/layout.js */
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Theme Check
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+/* =================================================================
+   LAYOUT.JS — Scholar Nexus
+   Injects navbar and footer into #app-header and #app-footer.
+   Handles logout. Uses new BEM CSS classes from layout.css.
+   ================================================================= */
 
-    // 2. Inject Header
-    const header = document.getElementById('app-header');
-    const path = window.location.pathname;
-    
-    if(header) {
-    const user = JSON.parse(localStorage.getItem('nexus_user'));
-    const authLink = user 
-        ? `<div style="display:flex; align-items:center; gap:15px;">
-             <span style="color:var(--accent); font-weight:bold;"><i class="fas fa-user-circle"></i> ${user.name}</span>
-             <button onclick="logout()" style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border); padding:5px 10px; border-radius:6px; cursor:pointer;">Logout</button>
-           </div>`
-        : `<a href="/login" class="nav-link" style="color:var(--accent); font-weight:bold;"><i class="fas fa-sign-in-alt"></i> Login</a>`;
+document.addEventListener("DOMContentLoaded", function () {
 
-    if(header) {
-        header.innerHTML = `
-            <div class="main-header">
-                <div class="brand" onclick="window.location.href='/'">
-                    <i class="fas fa-atom"></i> NEXUS
-                </div>
-                <nav class="nav-links">
-                    <a href="/" class="nav-link ${path === '/' ? 'active' : ''}">Home</a>
-                    <a href="/jobs" class="nav-link ${path === '/jobs' ? 'active' : ''}">Jobs & Map</a>
-                    <a href="/scanner" class="nav-link ${path === '/scanner' ? 'active' : ''}">Scanner</a>
-                    <a href="/explorer" class="nav-link ${path === '/explorer' ? 'active' : ''}">Explorer</a>
-                    <a href="/companies.html" class="nav-link ${path === '/companies.html' ? 'active' : ''}">Companies</a>
-                    <a href="/grad-form.html" class="nav-link ${path === '/grad-form.html' ? 'active' : ''}">Register Project</a>
-                    <a href="/grad-dashboard" class="nav-link">Database</a> 
-                    <a href="/team.html" class="nav-link ${path === '/team.html' ? 'active' : ''}">Team</a>
-                    ${authLink}
-                </nav>
-                <button onclick="toggleTheme()" style="background:none; border:none; color:var(--text-main); cursor:pointer; font-size:1.2rem;">
-                    <i class="fas fa-adjust"></i>
-                </button>
-            </div>
-        `;
+    /* ─── 1. Inject Navbar ─── */
+    var header = document.getElementById('app-header');
+    var path = window.location.pathname;
+
+    if (header) {
+        var user = JSON.parse(localStorage.getItem('nexus_user'));
+
+        var authHTML = '';
+        if (user) {
+            authHTML =
+                '<div class="navbar__user">' +
+                '<i class="fas fa-user-circle"></i> ' + user.name +
+                '</div>' +
+                '<button class="btn btn-sm btn-outline" id="logout-btn">Logout</button>';
+        } else {
+            authHTML =
+                '<a href="login.html" class="btn btn-sm btn-outline">Log in</a>' +
+                '<a href="login.html" class="btn btn-sm btn-primary">Register</a>';
+        }
+
+        header.innerHTML =
+            '<nav class="navbar">' +
+            '<div class="navbar__inner">' +
+
+            /* Brand */
+            '<a href="index.html" class="navbar__brand">' +
+            '<span class="navbar__brand-icon"><i class="fas fa-graduation-cap"></i></span>' +
+            'Scholar Nexus' +
+            '</a>' +
+
+            /* Navigation Links */
+            '<div class="navbar__links">' +
+            '<a href="scanner.html" class="navbar__link' + (path.includes('scanner') ? ' active' : '') + '">Academia</a>' +
+            '<a href="explorer.html" class="navbar__link' + (path.includes('explorer') ? ' active' : '') + '">Explorer</a>' +
+            '<a href="jobs.html" class="navbar__link' + (path.includes('jobs') ? ' active' : '') + '">Jobs</a>' +
+            '<a href="companies.html" class="navbar__link' + (path.includes('companies') ? ' active' : '') + '">Companies</a>' +
+            '<a href="hottopics.html" class="navbar__link' + (path.includes('hottopics') ? ' active' : '') + '">Hot Topics</a>' +
+            '<a href="grad-dashboard.html" class="navbar__link' + (path.includes('grad-dashboard') ? ' active' : '') + '">Database</a>' +
+            '</div>' +
+
+            /* Right Actions */
+            '<div class="navbar__actions">' +
+            '<button class="btn-icon" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">' +
+            '<i id="theme-icon" class="fas fa-moon"></i>' +
+            '</button>' +
+            authHTML +
+            '</div>' +
+
+            '</div>' +
+            '</nav>';
+
+        /* Update theme icon to match current state */
+        var currentTheme = document.documentElement.getAttribute('data-theme');
+        var themeIcon = document.getElementById('theme-icon');
+        if (themeIcon) {
+            themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        /* Attach logout handler */
+        var logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function () {
+                localStorage.removeItem('nexus_token');
+                localStorage.removeItem('nexus_user');
+                window.location.reload();
+            });
+        }
     }
 
-window.logout = function() {
-    localStorage.removeItem('nexus_token');
-    localStorage.removeItem('nexus_user');
-    window.location.reload();
-}
-    }
 
-    // 3. Inject Footer
-    const footer = document.getElementById('app-footer');
-    if(footer) {
-        footer.innerHTML = `
-            <div class="main-footer">
-                <div class="footer-links">
-                    <a href="/about">About</a>
-                    <a href="/api-docs">API Documentation</a>
-                    <a href="/privacy">Privacy Policy</a>
-                    <a href="/contact">Contact</a>
-                </div>
-                <div style="font-size:0.8rem; opacity:0.6;">&copy; 2026 Scholar Nexus. Our Team.</div>
-            </div>
-        `;
+    /* ─── 2. Inject Footer ─── */
+    var footer = document.getElementById('app-footer');
+    if (footer) {
+        footer.innerHTML =
+            '<footer class="footer">' +
+            '<div class="footer__grid">' +
+
+            /* Column 1: About */
+            '<div class="footer__column">' +
+            '<div class="footer__brand">' +
+            '<span class="footer__brand-icon"><i class="fas fa-graduation-cap"></i></span>' +
+            'Scholar Nexus' +
+            '</div>' +
+            '<p class="footer__text">The unified platform for academic research, global networking, and career opportunities in science and technology.</p>' +
+            '<div class="footer__social">' +
+            '<a href="#" class="footer__social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>' +
+            '<a href="#" class="footer__social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>' +
+            '<a href="#" class="footer__social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>' +
+            '</div>' +
+            '</div>' +
+
+            /* Column 2: Resources */
+            '<div class="footer__column">' +
+            '<h4 class="footer__column-title">Resources</h4>' +
+            '<div class="footer__links">' +
+            '<a href="scanner.html" class="footer__link">Researcher Scanner</a>' +
+            '<a href="explorer.html" class="footer__link">Topic Explorer</a>' +
+            '<a href="jobs.html" class="footer__link">Jobs Portal</a>' +
+            '<a href="hottopics.html" class="footer__link">Hot Topics</a>' +
+            '</div>' +
+            '</div>' +
+
+            /* Column 3: Legal */
+            '<div class="footer__column">' +
+            '<h4 class="footer__column-title">Legal</h4>' +
+            '<div class="footer__links">' +
+            '<a href="privacy.html" class="footer__link">Privacy Policy</a>' +
+            '<a href="api-docs.html" class="footer__link">API Documentation</a>' +
+            '<a href="about.html" class="footer__link">About Us</a>' +
+            '</div>' +
+            '</div>' +
+
+            /* Column 4: Connect */
+            '<div class="footer__column">' +
+            '<h4 class="footer__column-title">Connect</h4>' +
+            '<div class="footer__links">' +
+            '<a href="contact.html" class="footer__link">Contact Us</a>' +
+            '<a href="team.html" class="footer__link">Our Team</a>' +
+            '<a href="grad-form.html" class="footer__link">Register Project</a>' +
+            '</div>' +
+            '</div>' +
+
+            '</div>' +
+            '<div class="footer__bottom">&copy; 2026 Scholar Nexus. Built by Our Team.</div>' +
+            '</footer>';
     }
 });
 
-function toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
 
-    document.querySelectorAll('iframe').forEach(iframe => {
-        if(iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'THEME_CHANGE', theme: next }, '*');
-        }
-    });
-}
+/* ─── Global: logout (window-level for backward compat) ─── */
+window.logout = function () {
+    localStorage.removeItem('nexus_token');
+    localStorage.removeItem('nexus_user');
+    window.location.reload();
+};
 
+
+/* ─── Global: Success Toast ─── */
 function showSuccessToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-success';
+    var toast = document.createElement('div');
+    toast.className = 'toast toast--success';
     toast.innerText = message;
     document.body.appendChild(toast);
 
-    setTimeout(() => {
+    setTimeout(function () {
         toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 500);
+        toast.style.transition = 'opacity 0.4s ease';
+        setTimeout(function () { toast.remove(); }, 400);
     }, 3000);
 }

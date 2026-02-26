@@ -1,395 +1,800 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMPANIES // SCHOLAR NEXUS</title>
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <title>Global Companies — Scholar Nexus</title>
+    <meta name="description" content="Directory of VLSI, Embedded Systems, and Tech Companies worldwide.">
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://api.semanticscholar.org">
+    <link rel="dns-prefetch" href="https://logo.clearbit.com">
+    <link rel="dns-prefetch" href="https://ui-avatars.com">
+
+    <!-- Prefetch likely next pages -->
+    <link rel="prefetch" href="jobs.html">
+    <link rel="prefetch" href="index.html">
+
+    <!-- CSS: tokens → components → layout → page -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Map Libraries -->
+    <link rel="stylesheet" href="css/design-system.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/companies.css">
+
+    <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Global CSS -->
-    <link rel="stylesheet" href="/css/global.css">
 
-    <style>
-        /* --- PAGE SPECIFIC STYLES --- */
-        body { background-color: var(--bg-body); }
-        
-        /* Header Area */
-        .page-header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px;
-        }
-        .page-title { font-family: var(--font-header); font-size: 2.5rem; margin: 0; color: var(--text-main); }
-        .page-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; }
-
-        /* Controls */
-        .controls-grid {
-            display: grid; grid-template-columns: 200px 1fr 200px auto; gap: 15px; margin-bottom: 30px;
-        }
-        
-        .control-btn {
-            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted);
-            padding: 0 15px; height: 50px; border-radius: 8px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; gap: 8px; font-weight: 600; transition: 0.3s;
-        }
-        .control-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .control-btn.active { background: rgba(59, 130, 246, 0.1); border-color: var(--accent); color: var(--accent); }
-
-        .search-input {
-            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);
-            height: 50px; padding: 0 15px; border-radius: 8px; width: 100%; outline: none;
-        }
-        .search-input:focus { border-color: var(--accent); }
-
-        select {
-            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);
-            height: 50px; padding: 0 15px; border-radius: 8px; cursor: pointer; outline: none;
-        }
-
-        /* Company Grid */
-        .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-
-        .company-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-            padding: 20px; transition: 0.3s; cursor: pointer; display: flex; flex-direction: column;
-            position: relative; overflow: hidden; height: 100%;
-        }
-        .company-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .logo-placeholder {
-            width: 50px; height: 50px; background: #fff; border-radius: 8px; padding: 5px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .logo-placeholder img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        
-        .cat-tag { font-size: 0.7rem; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 3px 8px; border-radius: 4px; height: fit-content; }
-
-        .co-name { font-family: var(--font-header); font-size: 1.4rem; margin: 0 0 5px 0; color: var(--text-main); }
-        .co-industry { font-size: 0.85rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 15px; flex-grow: 1; }
-
-        .co-footer {
-            border-top: 1px solid var(--border); padding-top: 12px; margin-top: auto;
-            font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 5px;
-        }
-        .branch-badge { background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; margin-right: 5px; }
-
-        /* Modal Styles */
-        .modal-content { background: var(--bg-card); border: 1px solid var(--border); width: 700px; max-width: 95vw; height: 85vh; border-radius: 16px; display: flex; flex-direction: column; }
-        .modal-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; gap: 20px; align-items: center; }
-        .modal-body { padding: 25px; overflow-y: auto; flex: 1; }
-        .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
-
-        .link-btn {
-            flex: 1; text-align: center; padding: 12px; border-radius: 8px; font-weight: 600; text-decoration: none; transition: 0.2s;
-        }
-        .link-web { background: var(--accent); color: white; }
-        .link-web:hover { background: var(--accent-hover); }
-        .link-li { background: #0077b5; color: white; }
-        .link-li:hover { filter: brightness(1.1); }
-        .link-disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; opacity: 0.5; }
-
-        /* Admin Box */
-        .admin-box { grid-column: 1 / -1; background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--success); padding: 15px; border-radius: 8px; display: none; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    </style>
+    <!-- Theme: load first to prevent FOUC -->
+    <script src="js/theme.js"></script>
 </head>
+
 <body>
 
+    <!-- ═══ NAVBAR (injected by layout.js) ═══ -->
     <div id="app-header"></div>
 
-    <div class="container">
-        
-        <!-- Header -->
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">GLOBAL COMPANIES</h1>
-                <div class="page-subtitle">Directory of VLSI, Embedded Systems, and Tech Companies.</div>
-            </div>
-            <div style="text-align: right;">
-                <span id="result-count" style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">0</span>
-                <span style="color: var(--text-muted);"> Companies Found</span>
-            </div>
-        </div>
 
-        <!-- Admin Upload -->
-        <div id="admin-panel" class="admin-box">
-            <div>
-                <strong style="color: var(--success);"><i class="fas fa-database"></i> Database Update</strong>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">Upload Excel with sheets (USA, Europe, etc). Columns: Company, Website, LinkedIn.</div>
-            </div>
-            <div style="display:flex; gap:10px;">
-                <input type="file" id="excel-file" accept=".xlsx, .xls" style="font-size: 0.8rem; background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); padding: 5px;">
-                <button onclick="uploadCompanies()" style="background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">UPLOAD</button>
+    <!-- ═══ HERO SECTION ═══ -->
+    <section class="companies-hero">
+        <div class="container container--wide">
+            <div class="companies-hero__content">
+                <div class="companies-hero__text">
+                    <div class="companies-hero__badge">
+                        <i class="fas fa-globe-americas"></i>
+                        Global Directory
+                    </div>
+                    <h1 class="companies-hero__title">Global Companies</h1>
+                    <p class="companies-hero__subtitle">
+                        Directory of VLSI, Embedded Systems, and Tech Companies
+                    </p>
+                </div>
+                <div class="companies-hero__count">
+                    <span class="companies-hero__number" id="result-count">0</span>
+                    <span class="companies-hero__label">Companies Found</span>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- Controls -->
-        <div class="controls-grid">
-            <button class="control-btn" id="map-trigger" onclick="openMapModal()">
-                <i class="fas fa-globe-americas"></i> <span id="map-label">Location (All)</span>
-            </button>
-            
-            <input type="text" id="q-search" class="search-input" placeholder="Search by Name, Industry, or Tech Stack..." onkeyup="fetchCompanies()">
-            
-            <select id="f-category" onchange="fetchCompanies()">
-                <option value="All">All Categories</option>
-            </select>
 
-            <button onclick="fetchCompanies()" style="height: 50px; width: 50px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); cursor: pointer;">
-                <i class="fas fa-sync-alt"></i>
-            </button>
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <section class="companies-content">
+        <div class="container container--wide">
+
+            <!-- Admin Panel (hidden) -->
+            <div class="companies-admin" id="admin-panel">
+                <div class="companies-admin__info">
+                    <strong><i class="fas fa-database"></i> Database Update</strong>
+                    <span>Upload Excel with sheets (USA, Europe, etc). Columns: Company, Website, LinkedIn.</span>
+                </div>
+                <div class="companies-admin__actions">
+                    <input type="file" id="excel-file" accept=".xlsx, .xls" class="companies-admin__file">
+                    <button onclick="uploadCompanies()" class="btn btn-sm companies-admin__btn">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controls Bar -->
+            <div class="companies-controls">
+                <button class="companies-controls__map-btn" id="map-trigger" onclick="openMapModal()">
+                    <i class="fas fa-globe-americas"></i>
+                    <span id="map-label">Location (All)</span>
+                </button>
+
+                <input type="text" class="input-field companies-controls__search" id="q-search"
+                    placeholder="Search by Name, Industry, or Tech Stack..." onkeyup="fetchCompanies()">
+
+                <select class="input-field companies-controls__select" id="f-category" onchange="fetchCompanies()">
+                    <option value="All">All Categories</option>
+                </select>
+
+                <select class="input-field companies-controls__select" id="f-size" onchange="applyFilters()">
+                    <option value="All">All Sizes</option>
+                    <option value="1-50">1-50</option>
+                    <option value="51-200">51-200</option>
+                    <option value="201-500">201-500</option>
+                    <option value="501-1000">501-1,000</option>
+                    <option value="1001-5000">1,001-5,000</option>
+                    <option value="5001-10000">5,001-10,000</option>
+                    <option value="10001+">10,001+</option>
+                </select>
+
+                <button class="companies-controls__refresh" onclick="fetchCompanies()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+
+            <!-- Company Cards Grid -->
+            <div class="companies-grid" id="grid"></div>
+
         </div>
+    </section>
 
-        <!-- Grid -->
-        <div class="grid-layout" id="grid"></div>
-    </div>
 
-    <!-- DETAIL MODAL -->
+    <!-- ═══ DETAIL MODAL ═══ -->
     <div class="modal-overlay" id="detail-modal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content: flex-end; padding: 10px;">
-                <button onclick="document.getElementById('detail-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
-            </div>
-            <div id="modal-content-inject" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="modal-content companies-modal">
+            <button class="modal-close" onclick="document.getElementById('detail-modal').style.display='none'">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modal-content-inject" class="companies-modal__inner">
                 <!-- Injected via JS -->
             </div>
         </div>
     </div>
 
-    <!-- MAP MODAL -->
+
+    <!-- ═══ MAP MODAL ═══ -->
     <div class="modal-overlay" id="map-modal">
-        <div class="modal-content" style="width: 80vw; height: 80vh;">
-            <div style="padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;">
-                <h3>Filter by Presence</h3>
-                <button onclick="closeMapModal()" style="background: var(--accent); color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">Done</button>
+        <div class="modal-content companies-map-modal">
+            <div class="companies-map-modal__header">
+                <h3><i class="fas fa-map-marked-alt"></i> Filter by Presence</h3>
+                <button class="btn btn-primary btn-sm" onclick="closeMapModal()">Done</button>
             </div>
-            <div id="map-container" style="flex:1;"></div>
+            <div id="map-container" class="companies-map-modal__map"></div>
         </div>
     </div>
 
+
+    <!-- ═══ FOOTER (injected by layout.js) ═══ -->
     <div id="app-footer"></div>
-    <script src="/js/layout.js"></script>
+
+    <!-- JS: layout (navbar + footer injection) -->
+    <script src="js/layout.js"></script>
 
     <script>
+        /* ===========================================================
+        COMPANIES JS
+        All frozen IDs, fetch calls, and logic preserved
+        =========================================================== */
+
         let selectedCountries = [];
         let map;
         let geoLayer;
+        let dotMarkers = [];
+        let allCompaniesData = [];
 
+        /* ════════════════════════════════════════════════════════════
+           ⚠️ MOCK DATA FOR TESTING — DELETE THIS ENTIRE BLOCK LATER
+           ════════════════════════════════════════════════════════════ */
+        const MOCK_COMPANIES = [
+            {
+                id: 1, name: 'Synopsys', logo: 'https://ui-avatars.com/api/?name=Synopsys&background=2563eb&color=fff',
+                category: 'VLSI / Semiconductor', size: '10001+', industry: 'Electronic Design Automation',
+                hq_country: 'United States', website: 'synopsys.com', linkedin: 'linkedin.com/company/synopsys',
+                branches: [
+                    { country: 'United States', presence: 'HQ – Mountain View, CA' },
+                    { country: 'India', presence: 'R&D Center – Bangalore' },
+                    { country: 'Egypt', presence: 'Engineering Office – Cairo' },
+                    { country: 'Germany', presence: 'European HQ – Munich' },
+                    { country: 'China', presence: 'Shanghai Office' }
+                ]
+            },
+            {
+                id: 2, name: 'Mentor Graphics', logo: 'https://ui-avatars.com/api/?name=MG&background=8b5cf6&color=fff',
+                category: 'EDA / Software', size: '5001-10000', industry: 'EDA & IC Design Software',
+                hq_country: 'United States', website: 'mentor.com', linkedin: 'linkedin.com/company/mentor-graphics',
+                branches: [
+                    { country: 'United States', presence: 'HQ – Wilsonville, OR' },
+                    { country: 'Egypt', presence: 'Design Center – Cairo' },
+                    { country: 'United Kingdom', presence: 'UK Office – London' }
+                ]
+            },
+            {
+                id: 3, name: 'Valeo', logo: 'https://ui-avatars.com/api/?name=Valeo&background=10b981&color=fff',
+                category: 'AI / Machine Learning', size: '10001+', industry: 'Automotive AI & ADAS',
+                hq_country: 'France', website: 'valeo.com', linkedin: 'linkedin.com/company/valeo',
+                branches: [
+                    { country: 'France', presence: 'Global HQ – Paris' },
+                    { country: 'Egypt', presence: 'AI R&D Lab – Cairo' },
+                    { country: 'Germany', presence: 'Stuttgart Center' },
+                    { country: 'Japan', presence: 'Tokyo Office' },
+                    { country: 'China', presence: 'Shanghai R&D' },
+                    { country: 'India', presence: 'Bangalore Office' }
+                ]
+            },
+            {
+                id: 4, name: 'Si-Ware Systems', logo: 'https://ui-avatars.com/api/?name=SWS&background=f59e0b&color=fff',
+                category: 'Hardware / Embedded', size: '51-200', industry: 'MEMS & Spectral Sensing',
+                hq_country: 'Egypt', website: 'si-ware.com', linkedin: 'linkedin.com/company/si-ware-systems',
+                branches: [
+                    { country: 'Egypt', presence: 'HQ – Cairo, Smart Village' },
+                    { country: 'United States', presence: 'Sales Office – Boston' }
+                ]
+            },
+            {
+                id: 5, name: 'Instadeep', logo: 'https://ui-avatars.com/api/?name=ID&background=06b6d4&color=fff',
+                category: 'AI / Machine Learning', size: '201-500', industry: 'Enterprise AI & Decision Making',
+                hq_country: 'United Kingdom', website: 'instadeep.com', linkedin: 'linkedin.com/company/instadeep',
+                branches: [
+                    { country: 'United Kingdom', presence: 'HQ – London' },
+                    { country: 'France', presence: 'Paris Office' },
+                    { country: 'Germany', presence: 'Munich Lab' },
+                    { country: 'UAE', presence: 'Dubai Center' }
+                ]
+            },
+            {
+                id: 6, name: 'CyShield', logo: 'https://ui-avatars.com/api/?name=CS&background=ef4444&color=fff',
+                category: 'Cybersecurity', size: '51-200', industry: 'Managed Security Services',
+                hq_country: 'Egypt', website: 'cyshield.com', linkedin: 'linkedin.com/company/cyshield',
+                branches: [
+                    { country: 'Egypt', presence: 'HQ – Cairo' },
+                    { country: 'Saudi Arabia', presence: 'Riyadh Office' },
+                    { country: 'UAE', presence: 'Dubai Office' }
+                ]
+            },
+            {
+                id: 7, name: 'TSMC', logo: 'https://ui-avatars.com/api/?name=TSMC&background=1e3a5f&color=fff',
+                category: 'VLSI / Semiconductor', size: '10001+', industry: 'Semiconductor Manufacturing',
+                hq_country: 'Taiwan', website: 'tsmc.com', linkedin: 'linkedin.com/company/tsmc',
+                branches: [
+                    { country: 'Taiwan', presence: 'Global HQ – Hsinchu' },
+                    { country: 'United States', presence: 'Arizona Fab' },
+                    { country: 'Japan', presence: 'Kumamoto Fab' },
+                    { country: 'China', presence: 'Nanjing Fab' }
+                ]
+            },
+            {
+                id: 8, name: 'Fawry', logo: 'https://ui-avatars.com/api/?name=Fawry&background=eab308&color=fff',
+                category: 'Fintech', size: '1001-5000', industry: 'Digital Payments & Financial Services',
+                hq_country: 'Egypt', website: 'fawry.com', linkedin: 'linkedin.com/company/fawry',
+                branches: [
+                    { country: 'Egypt', presence: 'HQ – Cairo, Smart Village' }
+                ]
+            }
+        ];
+
+        const MOCK_CATEGORIES = ['VLSI / Semiconductor', 'AI / Machine Learning', 'EDA / Software', 'Hardware / Embedded', 'Cybersecurity', 'Fintech'];
+        const USE_MOCK_COMPANIES = true; // ← Set to false when real DB has data
+        /* ═══ END MOCK DATA BLOCK ═══ */
+
+
+        /* ── Country coordinate lookup ── */
+        const COUNTRY_COORDS = {
+            "Egypt": [26.8, 30.8], "United States": [37.1, -95.7],
+            "Germany": [51.2, 10.4], "United Kingdom": [55.4, -3.4],
+            "France": [46.2, 2.2], "Japan": [36.2, 138.2],
+            "China": [35.9, 104.2], "India": [20.6, 78.9],
+            "South Korea": [35.9, 127.8], "Netherlands": [52.1, 5.3],
+            "Switzerland": [46.8, 8.2], "Sweden": [60.1, 18.6],
+            "Denmark": [56.3, 9.5], "Finland": [61.9, 25.7],
+            "Norway": [60.5, 8.5], "Italy": [41.9, 12.6],
+            "Spain": [40.5, -3.7], "Canada": [56.1, -106.3],
+            "Australia": [-25.3, 133.8], "Brazil": [-14.2, -51.9],
+            "Saudi Arabia": [23.9, 45.1], "UAE": [23.4, 53.8],
+            "Israel": [31.0, 34.9], "Turkey": [38.9, 35.2],
+            "Taiwan": [23.7, 121.0], "Singapore": [1.4, 103.8],
+            "Malaysia": [4.2, 101.9], "Pakistan": [30.4, 69.3],
+            "Ireland": [53.1, -8.2], "Belgium": [50.5, 4.5],
+            "Austria": [47.5, 14.6], "Poland": [51.9, 19.1],
+            "Czech Republic": [49.8, 15.5], "Romania": [45.9, 24.9],
+            "Greece": [39.1, 21.8], "Portugal": [39.4, -8.2],
+            "Mexico": [23.6, -102.6], "Argentina": [-38.4, -63.6],
+            "South Africa": [-30.6, 22.9], "Nigeria": [9.1, 8.7],
+            "Kenya": [-0.0, 37.9], "Morocco": [31.8, -7.1],
+            "Thailand": [15.9, 100.9], "Vietnam": [14.1, 108.3],
+            "Indonesia": [-0.8, 113.9], "Philippines": [12.9, 121.8],
+            "New Zealand": [-40.9, 174.9], "Russia": [61.5, 105.3],
+            "Ukraine": [48.4, 31.2], "Hungary": [47.2, 19.5],
+            "Qatar": [25.4, 51.2], "Kuwait": [29.3, 47.5],
+            "Jordan": [30.6, 36.2], "Lebanon": [33.9, 35.5]
+        };
+
+        /* ── Category color mapping ── */
+        function getCategoryColor(category) {
+            if (!category) return '#64748b';
+            const c = category.toLowerCase();
+            if (c.includes('vlsi') || c.includes('semiconductor')) return '#2563eb';
+            if (c.includes('ai') || c.includes('machine learning')) return '#10b981';
+            if (c.includes('software') || c.includes('eda')) return '#8b5cf6';
+            if (c.includes('hardware') || c.includes('embedded')) return '#f59e0b';
+            if (c.includes('cloud')) return '#06b6d4';
+            if (c.includes('cybersecurity')) return '#ef4444';
+            if (c.includes('fintech')) return '#eab308';
+            if (c.includes('biotech')) return '#ec4899';
+            return '#64748b';
+        }
+
+
+        /* ── Init ── */
         async function init() {
-            // Admin Check
-            const user = JSON.parse(localStorage.getItem('nexus_user'));
-            if(user && user.role === 'admin') document.getElementById('admin-panel').style.display = 'flex';
+            try {
+                const user = JSON.parse(localStorage.getItem('nexus_user'));
+                if (user && user.role === 'admin') {
+                    document.getElementById('admin-panel').style.display = 'flex';
+                }
 
-            // Load Filters
-            const res = await fetch('/api/companies/filters');
-            const data = await res.json();
-            data.categories.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c; opt.innerText = c;
-                document.getElementById('f-category').appendChild(opt);
-            });
+                const res = await fetch('/api/companies/filters');
+                if (!res.ok) throw new Error('Filters failed: ' + res.status);
 
-            fetchCompanies();
+                const data = await res.json();
+                console.log('Filters loaded:', data);
+
+                if (data.categories) {
+                    data.categories.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.innerText = c;
+                        document.getElementById('f-category').appendChild(opt);
+                    });
+                }
+
+                /* ⚠️ MOCK FALLBACK — DELETE THIS IF BLOCK LATER */
+                if (USE_MOCK_COMPANIES && (!data.categories || data.categories.length === 0)) {
+                    MOCK_CATEGORIES.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.innerText = c;
+                        document.getElementById('f-category').appendChild(opt);
+                    });
+                }
+
+                await fetchCompanies();
+
+            } catch (err) {
+                console.error('Init failed:', err);
+                /* ⚠️ MOCK FALLBACK — DELETE THIS BLOCK LATER */
+                if (USE_MOCK_COMPANIES) {
+                    MOCK_CATEGORIES.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.innerText = c;
+                        document.getElementById('f-category').appendChild(opt);
+                    });
+                    allCompaniesData = MOCK_COMPANIES;
+                    document.getElementById('result-count').innerText = MOCK_COMPANIES.length;
+                    renderGrid(MOCK_COMPANIES);
+                }
+            }
         }
 
+
+        /* ── Fetch Companies ── */
         async function fetchCompanies() {
-            const q = document.getElementById('q-search').value;
-            const cat = document.getElementById('f-category').value;
-            const country = selectedCountries.join(',');
+            try {
+                const q = document.getElementById('q-search').value;
+                const cat = document.getElementById('f-category').value;
+                const country = selectedCountries.join(',');
 
-            const res = await fetch(`/api/companies?q=${q}&category=${cat}&country=${country}`);
-            const data = await res.json();
-            
-            document.getElementById('result-count').innerText = data.length;
-            renderGrid(data);
+                const res = await fetch(`/api/companies?q=${q}&category=${cat}&country=${country}`);
+
+                if (!res.ok) {
+                    console.error('API Error:', res.status, res.statusText);
+                    /* ⚠️ MOCK FALLBACK — DELETE THIS BLOCK LATER */
+                    if (USE_MOCK_COMPANIES) {
+                        let mockData = MOCK_COMPANIES;
+                        if (q) mockData = mockData.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
+                        if (cat && cat !== 'All') mockData = mockData.filter(c => c.category === cat);
+                        allCompaniesData = mockData;
+                        document.getElementById('result-count').innerText = mockData.length;
+                        renderGrid(mockData);
+                    }
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('Companies received:', data.length, data);
+
+                /* ⚠️ MOCK FALLBACK — DELETE THIS IF BLOCK LATER */
+                if (USE_MOCK_COMPANIES && (!data || data.length === 0)) {
+                    let mockData = MOCK_COMPANIES;
+                    const qVal = document.getElementById('q-search').value.toLowerCase();
+                    const catVal = document.getElementById('f-category').value;
+                    if (qVal) mockData = mockData.filter(c => c.name.toLowerCase().includes(qVal));
+                    if (catVal && catVal !== 'All') mockData = mockData.filter(c => c.category === catVal);
+                    allCompaniesData = mockData;
+                    document.getElementById('result-count').innerText = mockData.length;
+                    renderGrid(mockData);
+                    return;
+                }
+
+                document.getElementById('result-count').innerText = data.length;
+                allCompaniesData = data;
+                renderGrid(data);
+
+            } catch (err) {
+                console.error('Fetch failed:', err);
+                /* ⚠️ MOCK FALLBACK — DELETE THIS BLOCK LATER */
+                if (USE_MOCK_COMPANIES) {
+                    allCompaniesData = MOCK_COMPANIES;
+                    document.getElementById('result-count').innerText = MOCK_COMPANIES.length;
+                    renderGrid(MOCK_COMPANIES);
+                }
+            }
         }
 
+
+        /* ── Render Grid ── */
         function renderGrid(data) {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
 
-            if(data.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding: 50px; color: var(--text-muted);">No matches found.</div>';
+            if (data.length === 0) {
+                grid.innerHTML = `
+                        <div class="companies-empty">
+                            <i class="fas fa-building"></i>
+                            <h3>No matches found</h3>
+                            <p>Try adjusting your search or filters.</p>
+                        </div>
+                    `;
                 return;
             }
 
-            data.forEach(c => {
-                // Determine Branches Summary
-                const uniqueCountries = [...new Set(c.branches.map(b => b.country))];
-                const displayCountry = uniqueCountries.includes('United States') ? 'United States' : uniqueCountries[0];
-                const count = uniqueCountries.length;
-                
-                // Check if user filtered by a specific country, if so, does this company have a branch there?
-                // We highlight local presence.
-                const localPresence = c.branches.find(b => selectedCountries.includes(b.country)) || c.branches.find(b => b.country === 'Egypt'); // Default local highlight
-                
+            data.forEach((c, i) => {
+                const branches = Array.isArray(c.branches) ? c.branches : JSON.parse(c.branches || '[]');
+                c.branches = branches;
+                const uniqueCountries = [...new Set(branches.map(b => b.country))];
+                const localPresence = branches.find(b => selectedCountries.includes(b.country))
+                    || branches.find(b => b.presence && b.presence.length > 5);
+
+                /* Build website/linkedin URLs */
+                let websiteUrl = c.website || '';
+                let linkedinUrl = c.linkedin || '';
+                if (websiteUrl && !websiteUrl.startsWith('http')) websiteUrl = 'https://' + websiteUrl;
+                if (linkedinUrl && !linkedinUrl.startsWith('http')) linkedinUrl = 'https://' + linkedinUrl;
+
                 const card = document.createElement('div');
                 card.className = 'company-card';
+                card.style.animationDelay = `${i * 0.05}s`;
                 card.onclick = () => openDetail(c);
                 card.innerHTML = `
-                    <div class="card-header">
-                        <div class="logo-placeholder">
-                            <img src="${c.logo}" onerror="this.src='https://ui-avatars.com/api/?name=${c.name}&background=random'">
+                        <div class="company-card__header">
+                            <div class="company-card__logo">
+                                <img src="${c.logo}" alt="${c.name}"
+                                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random&color=fff'">
+                            </div>
+                            <div class="company-card__badges">
+                                <span class="company-card__category">${c.category}</span>
+                                ${c.size && c.size !== 'N/A'
+                        ? `<span class="company-card__size"><i class="fas fa-users"></i> ${c.size}</span>`
+                        : ''}
+                            </div>
                         </div>
-                        <div style="text-align:right;">
-                            <div class="cat-tag">${c.category}</div>
-                            ${c.size && c.size !== 'N/A' ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;"><i class="fas fa-users"></i> ${c.size}</div>` : ''}
+
+                        <h3 class="company-card__name">${c.name}</h3>
+                        <p class="company-card__industry">${c.industry || ''}</p>
+
+                        <div class="company-card__footer">
+                            <div class="company-card__meta-row">
+                                <div class="company-card__hq">
+                                    <i class="fas fa-globe"></i> HQ: ${c.hq_country}
+                                </div>
+                                ${uniqueCountries.length > 0
+                        ? `<span class="company-card__country-count">
+                                        <i class="fas fa-earth-americas"></i> ${uniqueCountries.length} Countries
+                                    </span>`
+                        : ''}
+                            </div>
+                            <div class="company-card__branches">
+                                ${uniqueCountries.slice(0, 3).map(ct =>
+                            `<span class="company-card__branch-pill">${ct}</span>`
+                        ).join('')}
+                                ${uniqueCountries.length > 3
+                        ? `<span class="company-card__branch-pill company-card__branch-pill--more">+${uniqueCountries.length - 3} more</span>`
+                        : ''}
+                            </div>
+                            ${localPresence && localPresence.presence
+                        ? `<div class="company-card__presence">
+                                    <i class="fas fa-check-circle"></i> ${localPresence.presence}
+                                </div>`
+                        : ''}
                         </div>
-                    </div>
-                    <h3 class="co-name">${c.name}</h3>
-                    <div class="co-industry">${c.industry}</div>
-                    
-                    <div class="co-footer">
-                        <div><i class="fas fa-globe"></i> HQ: ${c.hq_country}</div>
-                        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">
-                            ${uniqueCountries.slice(0, 3).map(ct => `<span class="branch-badge">${ct}</span>`).join('')}
-                            ${uniqueCountries.length > 3 ? `<span class="branch-badge">+${uniqueCountries.length - 3}</span>` : ''}
+
+                        <div class="company-card__hover-actions">
+                            ${websiteUrl
+                        ? `<a href="${websiteUrl}" target="_blank" class="company-card__action" onclick="event.stopPropagation()">
+                                    <i class="fas fa-globe"></i> Website
+                                </a>`
+                        : ''}
+                            ${linkedinUrl
+                        ? `<a href="${linkedinUrl}" target="_blank" class="company-card__action company-card__action--linkedin" onclick="event.stopPropagation()">
+                                    <i class="fab fa-linkedin"></i> LinkedIn
+                                </a>`
+                        : ''}
                         </div>
-                        ${localPresence ? `<div style="color:var(--success); margin-top:5px; font-weight:600;"><i class="fas fa-check-circle"></i> ${localPresence.presence || 'Local Presence'}</div>` : ''}
-                    </div>
-                `;
+                    `;
                 grid.appendChild(card);
             });
         }
 
+
+        /* ── Client-side size filter ── */
+        function applyFilters() {
+            const sizeVal = document.getElementById('f-size').value;
+            if (sizeVal === 'All') {
+                renderGrid(allCompaniesData);
+                document.getElementById('result-count').innerText = allCompaniesData.length;
+                return;
+            }
+
+            /* Parse size range */
+            let min = 0, max = Infinity;
+            if (sizeVal === '10001+') {
+                min = 10001;
+            } else {
+                const parts = sizeVal.split('-').map(Number);
+                min = parts[0];
+                max = parts[1];
+            }
+
+            /* Parse company size string to number */
+            function parseSize(str) {
+                if (!str || str === 'N/A') return -1;
+                const cleaned = String(str).replace(/[^0-9\-+]/g, '');
+                /* Handle ranges like "10001+" */
+                if (cleaned.endsWith('+')) return parseInt(cleaned) || -1;
+                /* Handle ranges like "201-500" */
+                if (cleaned.includes('-')) {
+                    const p = cleaned.split('-');
+                    return (parseInt(p[0]) + parseInt(p[1])) / 2;
+                }
+                return parseInt(cleaned) || -1;
+            }
+
+            const filtered = allCompaniesData.filter(c => {
+                const sz = parseSize(c.size);
+                if (sz === -1) return false;
+                return sz >= min && sz <= max;
+            });
+
+            document.getElementById('result-count').innerText = filtered.length;
+            renderGrid(filtered);
+        }
+
+
+        /* ── Open Detail Modal ── */
         function openDetail(c) {
-    // 1. Group branches by Region
-    const grouped = {};
-    c.branches.forEach(b => {
-        const reg = b.region || 'International';
-        if(!grouped[reg]) grouped[reg] = [];
-        grouped[reg].push(b);
-    });
+            const branches = Array.isArray(c.branches) ? c.branches : JSON.parse(c.branches || '[]');
+            c.branches = branches;
+            const grouped = {};
+            branches.forEach(b => {
+                const reg = b.region || 'International';
+                if (!grouped[reg]) grouped[reg] = [];
+                grouped[reg].push(b);
+            });
 
-
-            // 2. Build Branches HTML
-    let branchesHtml = '';
-    for(const [region, locs] of Object.entries(grouped)) {
-        branchesHtml += `<div style="margin-bottom:15px;">
-            <div style="color:var(--accent); font-size:0.8rem; font-weight:bold; margin-bottom:5px; text-transform:uppercase;">${region}</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                ${locs.map(l => `
-                    <div style="background:var(--bg-body); padding:10px; border-radius:6px; border:1px solid var(--border);">
-                        <div style="font-weight:600; font-size:0.9rem;">
-                            ${l.state ? `<span style="color:var(--text-main)">${l.state}, </span>` : ''}${l.country}
-                            ${l.city ? `<span style="color:var(--text-muted); font-size:0.8rem;">(${l.city})</span>` : ''}
+            let branchesHtml = '';
+            for (const [region, locs] of Object.entries(grouped)) {
+                branchesHtml += `
+                        <div class="companies-detail__region">
+                            <div class="companies-detail__region-label">${region}</div>
+                            <div class="companies-detail__region-grid">
+                                ${locs.map(l => `
+                                    <div class="companies-detail__loc-card">
+                                        <div class="companies-detail__loc-name">
+                                            ${l.state ? `<span>${l.state}, </span>` : ''}${l.country}
+                                            ${l.city ? `<span class="companies-detail__loc-city">(${l.city})</span>` : ''}
+                                        </div>
+                                        <div class="companies-detail__loc-presence">
+                                            ${l.presence || 'Presence details not listed'}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:3px;">
-                            ${l.presence || 'Presence details not listed'}
+                    `;
+            }
+
+            const hasWeb = c.website && c.website.length > 3;
+            const hasLi = c.linkedin && c.linkedin.length > 3;
+
+            let webLink = c.website || '';
+            if (hasWeb && !webLink.match(/^https?:\/\//i)) webLink = 'https://' + webLink;
+
+            let liLink = c.linkedin || '';
+            if (hasLi && !liLink.match(/^https?:\/\//i)) liLink = 'https://' + liLink;
+
+            const modal = document.getElementById('modal-content-inject');
+            modal.innerHTML = `
+                    <div class="companies-detail__header">
+                        <img src="${c.logo}" class="companies-detail__logo"
+                            onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random&color=fff'"
+                            alt="${c.name}">
+                        <div>
+                            <h2 class="companies-detail__name">${c.name}</h2>
+                            <p class="companies-detail__meta">${c.category} &bull; ${c.size || 'Size N/A'}</p>
                         </div>
                     </div>
-                `).join('')}
-            </div>
-        </div>`;
-    }
 
-    // 3. Build Buttons & Handle Protocols
-    const hasWeb = c.website && c.website.length > 3;
-    const hasLi = c.linkedin && c.linkedin.length > 3;
+                    <div class="companies-detail__body">
+                        <div class="companies-detail__industry">
+                            <strong><i class="fas fa-industry"></i> Industry Focus</strong>
+                            <p>${c.industry || 'No industry details available.'}</p>
+                        </div>
 
-    let webLink = c.website || '';
-    if(hasWeb && !webLink.match(/^https?:\/\//i)) webLink = 'https://' + webLink;
+                        <div class="companies-detail__locations">
+                            <h4><i class="fas fa-map-marked-alt"></i> Global Locations</h4>
+                            ${branchesHtml}
+                        </div>
+                    </div>
+
+                    <div class="companies-detail__footer">
+                        ${hasWeb
+                    ? `<a href="${webLink}" target="_blank" class="btn btn-primary companies-detail__link-web">
+                                <i class="fas fa-globe"></i> Visit Website
+                            </a>`
+                    : `<button disabled class="btn companies-detail__link-disabled">
+                                <i class="fas fa-globe"></i> No Website
+                            </button>`
+                }
+                        ${hasLi
+                    ? `<a href="${liLink}" target="_blank" class="btn companies-detail__link-li">
+                                <i class="fab fa-linkedin"></i> LinkedIn Profile
+                            </a>`
+                    : `<button disabled class="btn companies-detail__link-disabled">
+                                <i class="fab fa-linkedin"></i> No LinkedIn
+                            </button>`
+                }
+                    </div>
+                `;
+            document.getElementById('detail-modal').style.display = 'flex';
+        }
 
 
-    let liLink = c.linkedin || '';
-    if(hasLi && !liLink.match(/^https?:\/\//i)) liLink = 'https://' + liLink;
-
-    const modal = document.getElementById('modal-content-inject');
-    modal.innerHTML = `
-        <div class="modal-header">
-            <img src="${c.logo}" onerror="this.src='https://ui-avatars.com/api/?name=${c.name}&background=random'" style="width:70px; height:70px; border-radius:10px; background:#fff; object-fit:contain; padding:5px;">
-            <div>
-                <h2 style="margin:0; font-family:var(--font-header); font-size:2rem;">${c.name}</h2>
-                <div style="color:var(--text-muted);">${c.category} &bull; ${c.size || 'Size N/A'}</div>
-            </div>
-        </div>
-        <div class="modal-body">
-            <div style="margin-bottom:20px; background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 8px; border-left: 3px solid var(--accent);">
-                <strong style="color:var(--text-main); display:block; margin-bottom:5px;">Industry Focus</strong>
-                <p style="color:var(--text-muted); margin:0; line-height: 1.5;">${c.industry || 'No industry details available.'}</p>
-            </div>
-            
-            <h4 style="font-family: var(--font-header); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
-                <i class="fas fa-map-marked-alt"></i> Global Locations
-            </h4>
-            ${branchesHtml}
-        </div>
-        <div class="modal-footer">
-            ${hasWeb 
-                ? `<a href="${webLink}" target="_blank" class="link-btn link-web"><i class="fas fa-globe"></i> Visit Website</a>`
-                : `<button disabled class="link-btn link-disabled">No Website</button>`
-            }
-            ${hasLi 
-                ? `<a href="${liLink}" target="_blank" class="link-btn link-li"><i class="fab fa-linkedin"></i> LinkedIn Profile</a>`
-                : `<button disabled class="link-btn link-disabled">No LinkedIn</button>`
-            }
-        </div>
-    `;
-    document.getElementById('detail-modal').style.display = 'flex';
-}
-
-        /* --- MAP LOGIC --- */
+        /* ── Map Logic ── */
         function openMapModal() {
             document.getElementById('map-modal').style.display = 'flex';
-            if(!map) {
-                map = L.map('map-container').setView([20, 0], 2);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'OSM' }).addTo(map);
-                
-                fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
-                .then(r => r.json()).then(data => {
-                    geoLayer = L.geoJSON(data, {
-                        style: { color: '#333', weight: 1, fillColor: '#2a2a2a', fillOpacity: 0.7 },
-                        onEachFeature: (feature, layer) => {
-                            const name = feature.properties.name;
-                            // Basic mapping for known discrepancies
-                            const mapName = name === "United States of America" ? "United States" : name;
+            if (!map) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const tileUrl = isDark
+                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
-                            layer.on('click', () => {
-                                if(selectedCountries.includes(mapName)) {
-                                    selectedCountries = selectedCountries.filter(c => c !== mapName);
-                                    geoLayer.resetStyle(layer);
-                                } else {
-                                    selectedCountries.push(mapName);
-                                    layer.setStyle({ fillColor: '#3b82f6', fillOpacity: 0.9 });
-                                }
-                            });
-                        }
-                    }).addTo(map);
-                });
+                map = L.map('map-container').setView([20, 0], 2);
+                L.tileLayer(tileUrl, { attribution: '&copy; OSM contributors' }).addTo(map);
+
+                const defaultFill = isDark ? '#1e293b' : '#e2e8f0';
+
+                fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+                    .then(r => r.json())
+                    .then(data => {
+                        geoLayer = L.geoJSON(data, {
+                            style: {
+                                color: '#cbd5e1',
+                                weight: 1,
+                                fillColor: defaultFill,
+                                fillOpacity: 0.7
+                            },
+                            onEachFeature: (feature, layer) => {
+                                const name = feature.properties.name;
+                                const mapName = name === "United States of America" ? "United States" : name;
+
+                                layer.on('click', () => {
+                                    if (selectedCountries.includes(mapName)) {
+                                        selectedCountries = selectedCountries.filter(c => c !== mapName);
+                                        geoLayer.resetStyle(layer);
+                                    } else {
+                                        selectedCountries.push(mapName);
+                                        layer.setStyle({ fillColor: '#2563eb', fillOpacity: 0.9 });
+                                    }
+                                });
+                            }
+                        }).addTo(map);
+
+                        /* Plot company dots after GeoJSON */
+                        plotCompanyDots(allCompaniesData);
+                    });
+
+                /* Add legend */
+                addMapLegend();
             } else {
                 setTimeout(() => map.invalidateSize(), 200);
             }
         }
 
+        function plotCompanyDots(companies) {
+            dotMarkers.forEach(m => map.removeLayer(m));
+            dotMarkers = [];
+
+            companies.forEach(company => {
+                const branches = Array.isArray(company.branches) ? company.branches : JSON.parse(company.branches || '[]');
+                if (!branches.length) return;
+                branches.forEach(branch => {
+                    const coords = COUNTRY_COORDS[branch.country];
+                    if (!coords) return;
+
+                    /* Slight offset so overlapping dots spread */
+                    const lat = coords[0] + (Math.random() - 0.5) * 2;
+                    const lng = coords[1] + (Math.random() - 0.5) * 2;
+
+                    const marker = L.circleMarker([lat, lng], {
+                        radius: 8,
+                        fillColor: getCategoryColor(company.category),
+                        color: '#ffffff',
+                        weight: 2,
+                        fillOpacity: 0.9
+                    });
+
+                    marker.bindPopup(`
+                            <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 180px;">
+                                <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">${company.name}</div>
+                                <div style="color: #64748b; font-size: 12px; margin-bottom: 8px;">
+                                    ${branch.city ? branch.city + ', ' : ''}${branch.country}
+                                </div>
+                                <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px;
+                                    font-weight: 600; color: white; background: ${getCategoryColor(company.category)};">
+                                    ${company.category}
+                                </span>
+                                <div style="margin-top: 8px;">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('map-modal').style.display='none';openDetail(window.__companyRef_${company.name.replace(/[^a-zA-Z0-9]/g, '_')})"
+                                    style="color: #2563eb; font-size: 12px; font-weight: 600; text-decoration: none;">
+                                        View Details →
+                                    </a>
+                                </div>
+                            </div>
+                        `);
+
+                    /* Store reference for popup link */
+                    window['__companyRef_' + company.name.replace(/[^a-zA-Z0-9]/g, '_')] = company;
+
+                    marker.addTo(map);
+                    dotMarkers.push(marker);
+                });
+            });
+        }
+
+        function addMapLegend() {
+            const legend = L.control({ position: 'bottomleft' });
+            legend.onAdd = function () {
+                const div = L.DomUtil.create('div', 'companies-map-legend');
+                div.innerHTML = `
+                        <div class="companies-map-legend__title">Industry Legend</div>
+                        <div class="companies-map-legend__grid">
+                            <div class="companies-map-legend__item"><span style="background:#2563eb"></span>VLSI / Semiconductor</div>
+                            <div class="companies-map-legend__item"><span style="background:#10b981"></span>AI / Machine Learning</div>
+                            <div class="companies-map-legend__item"><span style="background:#8b5cf6"></span>Software / EDA</div>
+                            <div class="companies-map-legend__item"><span style="background:#f59e0b"></span>Hardware / Embedded</div>
+                            <div class="companies-map-legend__item"><span style="background:#06b6d4"></span>Cloud</div>
+                            <div class="companies-map-legend__item"><span style="background:#ef4444"></span>Cybersecurity</div>
+                            <div class="companies-map-legend__item"><span style="background:#eab308"></span>Fintech</div>
+                            <div class="companies-map-legend__item"><span style="background:#ec4899"></span>Biotech</div>
+                        </div>
+                    `;
+                return div;
+            };
+            legend.addTo(map);
+        }
+
         function closeMapModal() {
             document.getElementById('map-modal').style.display = 'none';
-            document.getElementById('map-label').innerText = selectedCountries.length ? `Selected (${selectedCountries.length})` : 'Location (All)';
+            document.getElementById('map-label').innerText =
+                selectedCountries.length ? `Selected (${selectedCountries.length})` : 'Location (All)';
             document.getElementById('map-trigger').classList.toggle('active', selectedCountries.length > 0);
             fetchCompanies();
         }
 
-        /* --- ADMIN UPLOAD --- */
+
+        /* ── Admin Upload ── */
         async function uploadCompanies() {
             const file = document.getElementById('excel-file').files[0];
-            if(!file) return Swal.fire('Error', 'Select a file', 'error');
-            
+            if (!file) return Swal.fire('Error', 'Select a file', 'error');
+
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('clear_db', 'true'); // Reset DB on upload
+            fd.append('clear_db', 'true');
 
             try {
-                const res = await fetch('/api/admin/upload-companies', { method:'POST', body:fd });
+                const res = await fetch('/api/admin/upload-companies', { method: 'POST', body: fd });
                 const d = await res.json();
-                if(d.success) { Swal.fire('Success', d.message, 'success'); fetchCompanies(); }
+                if (d.success) { Swal.fire('Success', d.message, 'success'); fetchCompanies(); }
                 else Swal.fire('Error', d.error, 'error');
-            } catch(e) { Swal.fire('Error', 'Upload failed', 'error'); }
+            } catch (e) { Swal.fire('Error', 'Upload failed', 'error'); }
         }
+
 
         init();
     </script>
+
 </body>
+
 </html>
