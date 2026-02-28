@@ -1370,6 +1370,55 @@
     }
 }
 
+/* User Fixes */
+@media (max-width: 768px) {
+    .local-search-layout {
+        flex-direction: column;
+    }
+
+    .local-search-sidebar {
+        width: 100%;
+        position: static;
+    }
+
+    .local-search-main {
+        width: 100%;
+    }
+
+    .researchers-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .researchers-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 @media (max-width: 600px) {
     .ls-grid--cards {
         grid-template-columns: 1fr;

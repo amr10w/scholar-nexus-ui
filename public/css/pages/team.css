@@ -590,3 +590,67 @@
         width: 80px;
     }
 }
+
+/* User Fixes */
+@media (max-width: 768px) {
+    .team-hero__inner {
+        flex-direction: column;
+        gap: var(--space-lg);
+    }
+
+    .team-hero__title {
+        font-size: 2rem;
+    }
+
+    .team-hero__stats {
+        flex-wrap: wrap;
+        padding-top: 0;
+    }
+
+    .team-stat-box {
+        width: calc(50% - var(--space-sm));
+    }
+
+    .team-filters {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        padding-bottom: var(--space-sm);
+    }
+
+    .team-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .team-leader-card {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--space-lg);
+    }
+
+    .team-leader-card__avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+
+    .team-building__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .team-hero__title {
+        font-size: 1.6rem;
+    }
+
+    .team-stat-box {
+        width: calc(50% - var(--space-xs));
+    }
+
+    .team-filter-tab {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+    }
+}

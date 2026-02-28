@@ -836,3 +836,33 @@
         flex-direction: column;
     }
 }
+
+/* User Fixes */
+@media (max-width: 768px) {
+    .explorer-layout {
+        flex-direction: column;
+    }
+
+    .explorer-sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+    }
+
+    .explorer-results {
+        width: 100%;
+    }
+
+    .paper-card__meta {
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+    }
+
+    .paper-card__actions {
+        flex-wrap: wrap;
+    }
+
+    .quick-topics {
+        flex-wrap: wrap;
+    }
+}

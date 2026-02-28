@@ -838,3 +838,56 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* User Fixes */
+@media (max-width: 768px) {
+    .companies-hero__content {
+        flex-direction: column;
+        gap: var(--space-lg);
+    }
+
+    .companies-hero__count {
+        text-align: left;
+    }
+
+    .companies-controls {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-sm);
+    }
+
+    .companies-controls__map-btn {
+        grid-column: 1 / -1;
+    }
+
+    .companies-controls__search {
+        grid-column: 1 / -1;
+    }
+
+    .companies-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .companies-map-modal .modal-content {
+        width: 95vw;
+        height: 90vh;
+    }
+
+    .companies-modal {
+        width: 95vw;
+        height: 90vh;
+    }
+
+    .companies-detail__region-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .companies-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .companies-hero__number {
+        font-size: 2.5rem;
+    }
+}

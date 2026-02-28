@@ -372,3 +372,72 @@
         align-items: stretch;
     }
 }
+
+/* User Fixes - Container Width */
+.container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+    box-sizing: border-box;
+}
+
+.container--wide {
+    max-width: 1440px;
+}
+
+@media (max-width: 768px) {
+
+    .container,
+    .container--wide {
+        padding: 0 var(--space-md);
+    }
+}
+
+@media (max-width: 480px) {
+
+    .container,
+    .container--wide {
+        padding: 0 var(--space-sm);
+    }
+}
+
+/* User Fixes - Navbar Mobile */
+@media (max-width: 768px) {
+    .navbar__links {
+        display: none;
+    }
+
+    .navbar__links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-card);
+        /* Fallback if --bg-nav missing */
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border);
+        z-index: 100;
+    }
+
+    .navbar__hamburger {
+        display: flex;
+    }
+
+    .navbar__actions {
+        gap: var(--space-xs);
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (min-width: 769px) {
+    .navbar__hamburger {
+        display: none;
+    }
+}
