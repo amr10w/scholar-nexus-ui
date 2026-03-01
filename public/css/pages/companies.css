@@ -494,16 +494,29 @@
 }
 
 
-/* --- MODAL BASE --- */
+/* ═══════════════════════════════════════════════
+   FIX 1 — MODAL OVERLAY: always true full-screen
+   ═══════════════════════════════════════════════ */
 .modal-overlay {
+    /* Force genuine viewport coverage regardless of any parent transform/stacking */
+    position: fixed !important;
+    inset: 0 !important;
+    /* shorthand: top/right/bottom/left = 0 */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    /* prevent parent transforms from shifting overlay */
+    background: rgba(0, 0, 0, 0.7);
     display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    z-index: 9999 !important;
 }
 
 .modal-content {
@@ -512,6 +525,8 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xl);
+    /* Ensure the card itself is never wider than the overlay */
+    max-width: calc(100vw - 32px);
 }
 
 .modal-close {
@@ -560,6 +575,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-lg);
+    flex-shrink: 0;
 }
 
 .companies-detail__logo {
@@ -585,11 +601,38 @@
     color: var(--text-secondary);
 }
 
+
+/* ═══════════════════════════════════════════════════════════
+   FIX 2 — SCROLL SHADOW on the detail modal scrollable body
+   ═══════════════════════════════════════════════════════════ */
 .companies-detail__body {
     padding: var(--space-lg);
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
+
+    /* Scroll-shadow technique:
+       Top & bottom "mask" gradients track with the content (local),
+       while the shadow gradients stay fixed to the element (scroll).
+       Result: shadows appear only when there is content hidden above/below. */
+    background:
+        /* fade-out at top — matches bg-card colour */
+        linear-gradient(var(--bg-card) 20%, transparent) center top,
+        /* fade-out at bottom */
+        linear-gradient(transparent, var(--bg-card) 80%) center bottom,
+        /* shadow line at top */
+        radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.12), transparent) center top,
+        /* shadow line at bottom */
+        radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.12), transparent) center bottom;
+
+    background-repeat: no-repeat;
+    background-size: 100% 48px, 100% 48px, 100% 16px, 100% 16px;
+    /* First two layers scroll WITH content → mask the reveal/hide edge.
+       Last two stay fixed → always show shadow under the scrollport edge. */
+    background-attachment: local, local, scroll, scroll;
+    background-color: var(--bg-card);
 }
+
 
 .companies-detail__industry {
     background: var(--primary-light);
@@ -681,6 +724,7 @@
     border-top: 1px solid var(--border);
     display: flex;
     gap: var(--space-sm);
+    flex-shrink: 0;
 }
 
 .companies-detail__link-web {
@@ -714,18 +758,27 @@
 
 /* --- MAP MODAL --- */
 .companies-map-modal {
-    width: 80vw;
+    position: relative;
+    width: 85vw;
     height: 80vh;
+    max-width: 1200px;
+    max-height: 800px;
     display: flex;
     flex-direction: column;
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 10000;
 }
 
 .companies-map-modal__header {
-    padding: var(--space-md) var(--space-lg);
-    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    height: 60px;
+    padding: 0 20px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    background: var(--bg-nav);
+    border-bottom: 1px solid var(--border);
 }
 
 .companies-map-modal__header h3 {
@@ -741,7 +794,8 @@
 
 .companies-map-modal__map {
     flex: 1;
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    width: 100%;
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -796,9 +850,16 @@
         grid-template-columns: 1fr 1fr;
     }
 
+    .companies-controls__map-btn {
+        grid-column: 1 / -1;
+    }
+
     .companies-controls__search {
         grid-column: 1 / -1;
-        order: -1;
+    }
+
+    .companies-controls__refresh {
+        display: none;
     }
 }
 
@@ -806,41 +867,42 @@
     .companies-hero__content {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .companies-hero__count {
-        text-align: left;
+        gap: var(--space-md);
     }
 
     .companies-hero__title {
-        font-size: 2rem;
+        font-size: 2.2rem;
     }
 
     .companies-controls {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
+    }
+
+    .companies-controls__select,
+    .companies-controls__search,
+    .companies-controls__map-btn {
+        width: 100%;
     }
 
     .companies-modal {
-        height: 95vh;
-        max-height: 95vh;
+        height: 100vh;
+        width: 100vw;
+        border-radius: 0;
+        max-width: none;
+    }
+
+    .modal-close {
+        top: 10px;
+        right: 10px;
+        background: var(--bg-card);
+        box-shadow: var(--shadow-sm);
     }
 
     .companies-map-modal {
         width: 95vw;
-        height: 90vh;
+        height: 85vh;
     }
 
-    .companies-detail__region-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .companies-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* User Fixes */
-@media (max-width: 768px) {
     .companies-hero__content {
         flex-direction: column;
         gap: var(--space-lg);
@@ -855,24 +917,11 @@
         gap: var(--space-sm);
     }
 
-    .companies-controls__map-btn {
-        grid-column: 1 / -1;
-    }
-
-    .companies-controls__search {
-        grid-column: 1 / -1;
-    }
-
     .companies-grid {
         grid-template-columns: 1fr;
     }
 
     .companies-map-modal .modal-content {
-        width: 95vw;
-        height: 90vh;
-    }
-
-    .companies-modal {
         width: 95vw;
         height: 90vh;
     }

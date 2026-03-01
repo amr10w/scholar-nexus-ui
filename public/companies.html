@@ -139,7 +139,18 @@
         <div class="modal-content companies-map-modal">
             <div class="companies-map-modal__header">
                 <h3><i class="fas fa-map-marked-alt"></i> Filter by Presence</h3>
-                <button class="btn btn-primary btn-sm" onclick="closeMapModal()">Done</button>
+                <div style="display:flex; gap: 8px; align-items:center;">
+                    <button class="btn btn-primary btn-sm" onclick="closeMapModal()">Done</button>
+                    <button onclick="closeMapModal()" style="width:36px; height:36px; border-radius:8px; border: 1px solid var(--border);
+                        background: transparent; color: var(--text-secondary); cursor:pointer;
+                        font-size:1.2rem; display:flex; align-items:center; justify-content:center;
+                        transition: 0.2s;"
+                        onmouseover="this.style.background='var(--bg-body)'; this.style.color='var(--text-primary)'"
+                        onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)'"
+                        aria-label="Close map">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
             <div id="map-container" class="companies-map-modal__map"></div>
         </div>
@@ -643,52 +654,76 @@
 
         /* ── Map Logic ── */
         function openMapModal() {
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.overflow = 'hidden';
+            document.body.dataset.scrollY = scrollY;
             document.getElementById('map-modal').style.display = 'flex';
+
             if (!map) {
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const tileUrl = isDark
-                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                /* FIX: wait for the overlay to be visible & sized before init Leaflet,
+                   so it can measure the container correctly and truly center the view. */
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        const tileUrl =
+                            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
-                map = L.map('map-container').setView([20, 0], 2);
-                L.tileLayer(tileUrl, { attribution: '&copy; OSM contributors' }).addTo(map);
+                        map = L.map('map-container', {
+                            center: [20, 0],
+                            zoom: 2,
+                            zoomControl: true
+                        });
 
-                const defaultFill = isDark ? '#1e293b' : '#e2e8f0';
+                        L.tileLayer(tileUrl, { attribution: '&copy; OSM contributors' }).addTo(map);
 
-                fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
-                    .then(r => r.json())
-                    .then(data => {
-                        geoLayer = L.geoJSON(data, {
-                            style: {
-                                color: '#cbd5e1',
-                                weight: 1,
-                                fillColor: defaultFill,
-                                fillOpacity: 0.7
-                            },
-                            onEachFeature: (feature, layer) => {
-                                const name = feature.properties.name;
-                                const mapName = name === "United States of America" ? "United States" : name;
+                        /* Force a size recalculation right after init */
+                        map.invalidateSize();
 
-                                layer.on('click', () => {
-                                    if (selectedCountries.includes(mapName)) {
-                                        selectedCountries = selectedCountries.filter(c => c !== mapName);
-                                        geoLayer.resetStyle(layer);
-                                    } else {
-                                        selectedCountries.push(mapName);
-                                        layer.setStyle({ fillColor: '#2563eb', fillOpacity: 0.9 });
+                        fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+                            .then(r => r.json())
+                            .then(data => {
+                                geoLayer = L.geoJSON(data, {
+                                    style: {
+                                        color: '#cbd5e1',
+                                        weight: 1,
+                                        fillColor: '#e2e8f0',
+                                        fillOpacity: 0.7
+                                    },
+                                    onEachFeature: (feature, layer) => {
+                                        const name = feature.properties.name;
+                                        const mapName = name === "United States of America" ? "United States" : name;
+
+                                        layer.on('click', () => {
+                                            if (selectedCountries.includes(mapName)) {
+                                                selectedCountries = selectedCountries.filter(c => c !== mapName);
+                                                geoLayer.resetStyle(layer);
+                                            } else {
+                                                selectedCountries.push(mapName);
+                                                layer.setStyle({ fillColor: '#2563eb', fillOpacity: 0.9 });
+                                            }
+                                        });
                                     }
-                                });
-                            }
-                        }).addTo(map);
+                                }).addTo(map);
 
-                        /* Plot company dots after GeoJSON */
-                        plotCompanyDots(allCompaniesData);
-                    });
+                                /* Plot company dots after GeoJSON loads */
+                                plotCompanyDots(allCompaniesData);
 
-                /* Add legend */
-                addMapLegend();
+                                /* Final invalidation after all layers are in */
+                                map.invalidateSize();
+                            });
+
+                        /* Add legend */
+                        addMapLegend();
+                    }, 100); /* 100ms is enough for the flex overlay to paint */
+                });
             } else {
-                setTimeout(() => map.invalidateSize(), 200);
+                /* Map already exists — just recalculate its size */
+                requestAnimationFrame(() => {
+                    map.invalidateSize();
+                });
             }
         }
 
@@ -766,6 +801,13 @@
         }
 
         function closeMapModal() {
+            const scrollY = parseInt(document.body.dataset.scrollY || '0');
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.overflow = '';
+            window.scrollTo(0, scrollY);
             document.getElementById('map-modal').style.display = 'none';
             document.getElementById('map-label').innerText =
                 selectedCountries.length ? `Selected (${selectedCountries.length})` : 'Location (All)';
